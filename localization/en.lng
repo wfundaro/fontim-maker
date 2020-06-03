@@ -1,0 +1,86 @@
+﻿[localisation]
+name = English
+
+[Menu]
+file = File
+open = Open
+save = Save
+save_as = Save As
+quit = Quit
+zoom = Zoom
+reset_zoom = Reset Zoom | Alt+Middle clic
+language = Language
+help = Help
+about = About
+
+[Gadget]  
+frame_background_color = Back color And info font size
+button_background_color_select = Background color
+font = Font
+font_size = Font Size
+bold = Bold
+italic = Italic
+underline = Underline
+offset = X <- Offset -> Y
+panel_color = Color
+linear = Linear
+circular = Circular
+scale = Scale
+radius = Radius   
+color_offset = X <- offset color -> Y
+angle = Angle
+alpha = Alpha
+position_gradient = X <- Gradient position -> Y
+outline = Outline
+active = Active
+over = Over
+width = Width
+pos_gradient = X <- Gradient pos -> Y
+effect = Effect
+panel_export_image = Image Export
+frame_format_image = Format of the exported image
+size_auto = Automatic size
+img_w_back = Img with background
+frame_mode_export = Export mode
+opt_img_single = A single image
+opt_img_multi = One image per character
+check_char_name = Character in name (FileA,FileB...)
+check_file_counter = Add counter (File1, File2,...)
+frame_img_filename = Image file name
+button_visualization = Visualization
+button_export = Export
+panel_export_data = Data Export
+frame_template = Template
+button_save_template = Save
+button_add_template = New
+button_delete_template = Delete
+frame_output_data = Export Format
+info_format_data_001 = EX :  name_%i,%x,%y,%sizex,%sizey
+info_format_data_002 = %i  -> To add an increment
+info_format_data_003 = %asc -> Adds the ascii character value
+info_format_data_004 = %chr -> character
+info_format_data_005 = %x %y -> Position of the character in the image
+info_format_data_006 = %sizex %sizey-> Size character in image
+frame_data_filename = Name of the Data file
+check_name_as_image = Same name As image file(s)
+label_info_file_img = %image -> Add the name of the image
+label_info_size_font = Size font in view : 
+
+[Template]
+input_template_title = Add template
+input_template_text = Enter template name :
+
+[Tooltip]
+view_background_color = Background color in the display below
+button_background_color = Change background color
+label_size_font = Font size in the display below
+spin_radius_circular_gradient = Modifies radius of the gradient
+angle_gradient = Rotates the gradient
+check_over_outline = If checked, the outline will be over the text
+check_mod_char_sel = If enabled, you can modify a character independently of the others
+button_char_copy = Copy character parameters
+button_char_paste = Replaces parameters with previously copied
+Check_img_with_back = If no checked back image is transparent
+button_save_template = Save selected template
+button_add_template = Save as a new template
+button_delete_template = Delete selected template

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.72 (Windows - x64)">
+  <section name="config">
+    <options closefiles="1" openmode="0" name="Fontim_Maker"/>
+  </section>
+  <section name="data">
+    <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
+    <log show="1"/>
+    <lastopen date="2020-06-03 18:21" user="Developper" host="DESKTOP-M1J9HL8"/>
+  </section>
+  <section name="files">
+    <file name="main.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
+      <fingerprint md5="f85ec2dca017f18ec1a1f1aff983d7f9"/>
+    </file>
+    <file name="src\declaration.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="d2eb6224f080a7bf9ba48a8384fef272"/>
+    </file>
+    <file name="src\interface_fm.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="7f919a46166e1559de948ea1a832a805"/>
+    </file>
+    <file name="src\module_gadget_gradient.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="a74ce1b2b200d94ed6d37e0ab2ec562d"/>
+    </file>
+    <file name="src\proc.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <fingerprint md5="0c830e6e2edb3f7707f7d820fa70d571"/>
+    </file>
+  </section>
+  <section name="targets">
+    <target name="Cible par défaut" enabled="1" default="1">
+      <inputfile value="main.pb"/>
+      <outputfile value="FontimMaker_1.0.exe"/>
+      <options xpskin="1" debug="1"/>
+      <versioninfo enable="1">
+        <field0 value="1.0.0.0"/>
+        <field2 value="kws"/>
+        <field3 value="Fontim Maker"/>
+        <field9 value="kws"/>
+        <field13 value="kwandjeen@gmail.com"/>
+      </versioninfo>
+    </target>
+  </section>
+</project>

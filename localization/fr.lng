@@ -1,0 +1,86 @@
+﻿[localisation]
+name = Français
+
+[Menu]
+file = Fichier
+open = Ouvrir
+save = Sauvegarder
+save_as = Sauvegarder sous
+quit = Quitter
+zoom = Zoom
+reset_zoom = Reset Zoom | Alt+Clic molette
+language = Langue
+help = Aide
+about = A propos
+
+[Gadget]  
+frame_background_color = Couleur fond et info taille police
+button_background_color_select = Couleur fond
+font = Police
+font_size = Taille police
+bold = Gras
+italic = Italique
+underline = Souligné
+offset = X <- Décalage -> Y
+panel_color = Couleur
+linear = Linéaire
+circular = Circulaire
+scale = Echelle
+radius = Rayon
+color_offset = X <- Décalage couleur -> Y
+angle = Angle
+alpha = Alpha
+position_gradient = X <- Position dégradé -> Y
+outline = Contour
+active = Actif
+over = Dessus
+width = Largeur
+pos_gradient = X <- pos dégradé -> Y
+effect = Effet
+panel_export_image = Export image
+frame_format_image = Format de l'image exportée
+size_auto = Taille automatique
+img_w_back = Image avec fond
+frame_mode_export = Mode export
+opt_img_single = Une image unique
+opt_img_multi = Une image par caractère
+check_char_name = Caractère dans le nom (FileA,FileB...)
+check_file_counter = Ajout compteur (File1, File2,...)
+frame_img_filename = Nom du fichier image
+button_visualisation = Visualisation
+button_export = Export
+panel_export_data = Export données
+frame_template = Template
+button_save_template = Sauver
+button_add_template = Nouveau
+button_delete_template = Effacer
+frame_output_data = Format d'export
+info_format_data_001 = EX :  name_%i,%x,%y,%sizex,%sizey
+info_format_data_002 = %i  -> pour ajouter un incrément
+info_format_data_003 = %asc -> ajoute la valeur du caractère ascii
+info_format_data_004 = %chr -> caractère
+info_format_data_005 = %x %y -> position du caractère dans l'image
+info_format_data_006 = %sizex %sizey-> taille caractère dans l'image
+frame_data_filename = Nom du fichier données
+check_name_as_image = Même nom que le(s) fichier(s) image
+label_info_file_img = %image -> ajoute le nom de l'image
+label_info_size_font = Taille police ci-dessous : 
+
+[Template]
+input_template_title = Ajout d'un template
+input_template_text = Saisissez un nom pour le template :
+
+[Tooltip]
+view_background_color = Couleur du fond dans l'affichage ci-dessous
+button_background_color = Modifier la couleur de fond
+label_size_font = Taille de la police dans l'affichage ci-dessous
+spin_radius_circular_gradient = Modifie le rayon d'action du dégradé
+angle_gradient = Effectue une rotation du dégradé
+check_over_outline = Si coché, le contour sera par dessus le texte
+check_mod_char_sel = Si activé permet de modifier un caractère indépendamment des autres
+button_char_copy = Copie les paramètres du caractère
+button_char_paste = Remplace les paramètres par ceux copiés auparavant
+Check_img_with_back = La couleur de fond sera enregistrée avec l'image
+button_save_template = Sauvegarde le template en cours
+button_add_template = Sauvegarde un nouveau template
+button_delete_template = Efface le template en cours
