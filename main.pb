@@ -173,7 +173,7 @@ Repeat
           EndIf
         Case #check_outline_active, #check_outline_over, #check_bold, #check_italic ,
              #check_underline, #spin_offset_x, #spin_offset_y, #track_angle_outline, #Track_alpha_outline,
-             #Track_angle_color, #Track_alpha_color
+             #Track_angle_color, #Track_alpha_color, #check_square_end, #check_round_end, #check_diagonal_corner, #check_rounded_corner
           event_gadget(gevent)
         Case #Button_save_template
           save_template()
@@ -212,7 +212,7 @@ Repeat
   EndSelect  
 Until event = #PB_Event_CloseWindow
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 134
-; FirstLine = 30
+; CursorPosition = 175
+; FirstLine = 153
 ; Folding = -
 ; EnableXP

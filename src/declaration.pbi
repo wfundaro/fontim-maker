@@ -5,7 +5,11 @@ Declare add_template()
 Declare update_template()
 Declare delete_template()
 Declare draw_canvas(mode=2)
-Declare draw_outline(x, y, decal_x.d, decal_y.d, offset_x.d, offset_y.d, hauteur, angle_degrade_contour.f, size_contour, nb_curseur_contour, couleur_contour1)
+Declare draw_outline(char$, x, y, character_width.i, character_height.i,
+                     linear_gradient.b, gradient_posx.d, gradient_posy.d,
+                     scale.f, radius.i, angle_degrade_outline.f, 
+                     size_outline.d, path_option.i, alpha.i, 
+                     nb_curseur_outline, color_outline1) 
 Declare update_option_gradient_color()
 Declare update_option_gradient_outline()
 Declare update_option_character_gradient_color()
@@ -17,6 +21,10 @@ Declare calcul_size_font_view(mode=2)
 #SIZE_WORK_IMAGE = 4096
 #CELL_WIDTH = 30
 #CELL_HEIGHT = 40
+#COEFF_1 = 30.0
+#COEFF_2 = 100.0
+#CHARACTER_VIEW_WIDTH = 480.0
+#CHARACTER_VIEW_HEIGHT = 640.0
 
 Enumeration #PB_Event_FirstCustomValue
   #pb_event_gradient  
@@ -76,9 +84,10 @@ Structure _character_outline Extends _character_color
   ;linear.b
   ;radius.i
   ;scale.i
-  width.i
+  width.d
   offset_x.d
   offset_y.d
+  path_option.i
   ;angle.f
   ;alpha.i
   ;circular_gradient_posx.d
@@ -145,6 +154,6 @@ Macro Alpha(color)
   color >> 24 & $FF
 EndMacro
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 17
+; CursorPosition = 11
 ; Folding = -
 ; EnableXP

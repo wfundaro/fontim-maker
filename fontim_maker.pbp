@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2020-06-03 18:21" user="Developper" host="DESKTOP-M1J9HL8"/>
+    <lastopen date="2020-06-04 09:00" user="Developper" host="DESKTOP-M1J9HL8"/>
   </section>
   <section name="files">
     <file name="main.pb">
@@ -16,19 +16,19 @@
     </file>
     <file name="src\declaration.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="d2eb6224f080a7bf9ba48a8384fef272"/>
+      <fingerprint md5="56a0c4b67a5054692406c51975917ef4"/>
     </file>
     <file name="src\interface_fm.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="7f919a46166e1559de948ea1a832a805"/>
+      <fingerprint md5="72e59f34e39a021eb25ce7709929d2f2"/>
     </file>
     <file name="src\module_gadget_gradient.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="a74ce1b2b200d94ed6d37e0ab2ec562d"/>
+      <fingerprint md5="209df81d836a4f1a85078bc8e2c9ab49"/>
     </file>
     <file name="src\proc.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="0c830e6e2edb3f7707f7d820fa70d571"/>
+      <fingerprint md5="ec0802abaf59b22c898d86242c497ca0"/>
     </file>
   </section>
   <section name="targets">

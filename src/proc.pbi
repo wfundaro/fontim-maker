@@ -30,7 +30,7 @@ Procedure init_canvas()
     \color\linear_gradient_posx = GetGadgetState(#Spin_posx_color_linear_gradient)
     \color\linear_gradient_posy = GetGadgetState(#Spin_posy_color_linear_gradient)
     \color\radius = GetGadgetState(#spin_radius_circular_gradient)
-    \color\scale = GetGadgetState(#spin_scale_linear_gradient) / 100.0
+    \color\scale = GetGadgetState(#spin_scale_linear_gradient) / #COEFF_2
     AddElement(\color\cursor())
     gradient::FirstElement_cursor(#gradient_color)
     \color\cursor()\active = gradient::get_cursor_state()
@@ -44,13 +44,13 @@ Procedure init_canvas()
     \outline\angle = Radian(GetGadgetState(#Track_angle_outline))
     \outline\circular_gradient_posx = GetGadgetState(#Spin_posx_circular_gradient_outline)
     \outline\circular_gradient_posy = GetGadgetState(#Spin_posy_circular_gradient_outline)
-    \outline\width = GetGadgetState(#spin_size_outline)
+    \outline\width = GetGadgetState(#spin_size_outline) / #COEFF_2
     \outline\linear = GetGadgetState(#option_linear_gradient_outline)
     \outline\offset_x = GetGadgetState(#Spin_offset_x_outline)
     \outline\offset_y = GetGadgetState(#Spin_offset_y_outline)
     \outline\over = GetGadgetState(#check_outline_over)
     \outline\radius = GetGadgetState(#Spin_radius_gradient_outline)
-    \outline\scale = GetGadgetState(#Spin_scale_gradient_outline) / 100.0
+    \outline\scale = GetGadgetState(#Spin_scale_gradient_outline) / #COEFF_2
     AddElement(\outline\cursor())
     
     \outline\cursor()\active = gradient::get_cursor_state()
@@ -92,11 +92,11 @@ Procedure.i getColumn(mouse_y)
   ProcedureReturn Int((mouse_y - (zoom\posy * zoom\zoom)) / (#CELL_HEIGHT * zoom\zoom))
 EndProcedure
 
-Procedure.q get_convert_position_x(mouse_x)
+Procedure.d get_convert_position_x(mouse_x)
   ProcedureReturn (mouse_x - (zoom\posx * zoom\zoom)) / (zoom\zoom)  
 EndProcedure
 
-Procedure.q get_convert_position_y(mouse_y)
+Procedure.d get_convert_position_y(mouse_y)
   ProcedureReturn (mouse_y - (zoom\posy * zoom\zoom)) / (zoom\zoom)  
 EndProcedure
 
@@ -111,7 +111,7 @@ Procedure resize_window()
   ResizeGadget(#panel_font, wx - GadgetWidth(#panel_font)-5 , #PB_Ignore,#PB_Ignore,#PB_Ignore)
   ResizeGadget(#Panel_export, wx - GadgetWidth(#Panel_export)-5 , #PB_Ignore,#PB_Ignore,#PB_Ignore)
   ResizeGadget(#canvas_character_view, #PB_Ignore, #PB_Ignore , wx - 320 , wy - GadgetY(#canvas_character_view) - 10 - MenuHeight()) 
-  zoom\zoom = GadgetWidth(#canvas_character_view) / 480.0
+  zoom\zoom = GadgetWidth(#canvas_character_view) / #CHARACTER_VIEW_WIDTH
   draw_canvas()
   calcul_size_font_view(0)
 EndProcedure
@@ -120,9 +120,9 @@ Procedure zoom_reset()
   tx_canvas = GadgetWidth(#canvas_character_view)
   ty_canvas = GadgetHeight(#canvas_character_view)
   If tx_canvas > ty_canvas
-    zoom\zoom = ty_canvas / 640
+    zoom\zoom = ty_canvas / #CHARACTER_VIEW_HEIGHT
   Else
-    zoom\zoom = tx_canvas / 480
+    zoom\zoom = tx_canvas / #CHARACTER_VIEW_WIDTH
   EndIf
   zoom\posx = 0
   zoom\posy = 0
@@ -323,6 +323,10 @@ Procedure change_language()
     SetGadgetText(#check_outline_active,ReadPreferenceString("active","Active"))
     SetGadgetText(#check_outline_over,ReadPreferenceString("over","Over"))
     SetGadgetText(#label_size_outline,ReadPreferenceString("width","Width"))
+    SetGadgetText(#check_square_end, ReadPreferenceString("check_square_end", "Square end"))
+    SetGadgetText(#check_round_end, ReadPreferenceString("check_round_end", "Round end"))
+    SetGadgetText(#check_diagonal_corner, ReadPreferenceString("check_diagonal_corner", "Diagonal corner"))
+    SetGadgetText(#check_rounded_corner, ReadPreferenceString("check_rounded_corner", "Rounded corner"))
     SetGadgetText(#option_linear_gradient_outline,ReadPreferenceString("linear","Linear"))
     SetGadgetText(#option_circular_gradient_outline,ReadPreferenceString("circular","Circular"))
     SetGadgetText(#label_scale_gradient_outline,ReadPreferenceString("scale","Scale"))
@@ -377,6 +381,10 @@ Procedure change_language()
     GadgetToolTip(#Button_save_template,ReadPreferenceString("button_save_template","Save selected template"))
     GadgetToolTip(#button_add_template,ReadPreferenceString("button_add_template","Save as a new template"))
     GadgetToolTip(#button_delete_template,ReadPreferenceString("button_delete_template","Delete selected template"))
+    GadgetToolTip(#check_square_end, ReadPreferenceString("check_square_end","Square End of outline"))
+    GadgetToolTip(#check_round_end, ReadPreferenceString("check_round_end","Round End of outline"))
+    GadgetToolTip(#check_diagonal_corner, ReadPreferenceString("check_diagonal_corner","Corner of diagonal outline"))
+    GadgetToolTip(#check_rounded_corner, ReadPreferenceString("check_rounded_corner","Corner of rounded outline"))
     ClosePreferences()
   EndIf
   ;save_preference()
@@ -523,39 +531,78 @@ Procedure calcul_size_font_view(mode=2)
   draw_canvas()
 EndProcedure
 
+Procedure get_outline_path_option()
+  path_end = #PB_Path_Default
+  corner = #PB_Path_Default
+  If GetGadgetState(#check_square_end) = #PB_Checkbox_Checked
+    path_end = #PB_Path_SquareEnd
+  EndIf
+  If GetGadgetState(#check_round_end) = #PB_Checkbox_Checked
+    path_end = #PB_Path_RoundEnd
+  EndIf
+  If GetGadgetState(#check_diagonal_corner) = #PB_Checkbox_Checked
+    corner = #PB_Path_DiagonalCorner
+  EndIf
+  If GetGadgetState(#check_rounded_corner) = #PB_Checkbox_Checked
+    corner = #PB_Path_RoundCorner
+  EndIf
+  global_character\outline\path_option = path_end | corner
+  ProcedureReturn global_character\outline\path_option
+EndProcedure
+
 Procedure event_gadget(gadget.i)
-  Protected color.i, coeff1.q = 30.0, coeff2.q = 100.0
+  Protected color.i
   Select gadget
     Case #Spin_posx_color_linear_gradient
-      global_character\color\linear_gradient_posx = GetGadgetState(#Spin_posx_color_linear_gradient)/coeff1
+      global_character\color\linear_gradient_posx = GetGadgetState(#Spin_posx_color_linear_gradient) / #COEFF_1
     Case #Spin_posy_color_linear_gradient
-      global_character\color\linear_gradient_posy = GetGadgetState(#Spin_posy_color_linear_gradient)/coeff1
+      global_character\color\linear_gradient_posy = GetGadgetState(#Spin_posy_color_linear_gradient) / #COEFF_1
     Case #spin_scale_linear_gradient
-      global_character\color\scale = GetGadgetState(#spin_scale_linear_gradient) / coeff2
+      global_character\color\scale = GetGadgetState(#spin_scale_linear_gradient) / #COEFF_2
     Case #spin_posx_color_circular_gradient
-      global_character\color\circular_gradient_posx = GetGadgetState(#spin_posx_color_circular_gradient)/coeff1
+      global_character\color\circular_gradient_posx = GetGadgetState(#spin_posx_color_circular_gradient) / #COEFF_1
     Case #spin_posy_color_circular_gradient
-      global_character\color\circular_gradient_posy = GetGadgetState(#spin_posy_color_circular_gradient)/coeff1
+      global_character\color\circular_gradient_posy = GetGadgetState(#spin_posy_color_circular_gradient) / #COEFF_1
     Case #spin_radius_circular_gradient
       global_character\color\radius = GetGadgetState(#spin_radius_circular_gradient)
     Case #spin_size_outline
-      global_character\outline\width = GetGadgetState(#spin_size_outline)
+      global_character\outline\width = GetGadgetState(#spin_size_outline) / #COEFF_2
     Case #Spin_offset_x_outline
-      global_character\outline\offset_x = GetGadgetState(#Spin_offset_x_outline) / coeff2
+      global_character\outline\offset_x = GetGadgetState(#Spin_offset_x_outline) / #COEFF_2
     Case #Spin_offset_y_outline
-      global_character\outline\offset_y = GetGadgetState(#Spin_offset_y_outline) / coeff2
+      global_character\outline\offset_y = GetGadgetState(#Spin_offset_y_outline) / #COEFF_2
     Case #Spin_posx_circular_gradient_outline
-      global_character\outline\circular_gradient_posx = GetGadgetState(#Spin_posx_circular_gradient_outline)/coeff1
+      global_character\outline\circular_gradient_posx = GetGadgetState(#Spin_posx_circular_gradient_outline) / #COEFF_1
     Case #Spin_posy_circular_gradient_outline
-      global_character\outline\circular_gradient_posy = GetGadgetState(#Spin_posy_circular_gradient_outline)/coeff1
+      global_character\outline\circular_gradient_posy = GetGadgetState(#Spin_posy_circular_gradient_outline) / #COEFF_1
     Case #Spin_radius_gradient_outline
       global_character\outline\radius = GetGadgetState(#Spin_radius_gradient_outline)
     Case #Spin_scale_gradient_outline
-      global_character\outline\scale = GetGadgetState(#Spin_scale_gradient_outline) / coeff2
+      global_character\outline\scale = GetGadgetState(#Spin_scale_gradient_outline) / #COEFF_2
     Case #Check_outline_active
       global_character\outline\active = GetGadgetState(#Check_outline_active)
     Case #check_outline_over
       global_character\outline\over = GetGadgetState(#check_outline_over)
+    Case #check_square_end
+      If GetGadgetState(#check_square_end) = #PB_Checkbox_Checked And GetGadgetState(#check_round_end) = #PB_Checkbox_Checked 
+        SetGadgetState(#check_round_end, #PB_Checkbox_Unchecked)
+      EndIf
+      get_outline_path_option()
+    Case #check_round_end
+      If GetGadgetState(#check_round_end) = #PB_Checkbox_Checked And GetGadgetState(#check_square_end) = #PB_Checkbox_Checked 
+        SetGadgetState(#check_square_end, #PB_Checkbox_Unchecked)  
+      EndIf
+      get_outline_path_option()
+    Case #check_diagonal_corner
+      If GetGadgetState(#check_diagonal_corner) = #PB_Checkbox_Checked And GetGadgetState(#check_rounded_corner) = #PB_Checkbox_Checked 
+        SetGadgetState(#check_rounded_corner, #PB_Checkbox_Unchecked)  
+      EndIf
+      get_outline_path_option()
+    Case #check_rounded_corner
+      If GetGadgetState(#check_rounded_corner) = #PB_Checkbox_Checked And GetGadgetState(#check_diagonal_corner) = #PB_Checkbox_Checked 
+        SetGadgetState(#check_diagonal_corner, #PB_Checkbox_Unchecked)  
+      EndIf
+      get_outline_path_option()
     Case #Track_angle_outline
       SetGadgetText(#Entry_angle_outline,Str(GetGadgetState(#Track_angle_outline)))
       global_character\outline\angle = Radian(GetGadgetState(#Track_angle_outline))
@@ -587,9 +634,9 @@ Procedure event_gadget(gadget.i)
       EndIf
       LoadFont(#font_global_canvas,font_system(),font_size_in_view,global_character\style)
     Case #spin_offset_x
-      global_character\offset_x = GetGadgetState(#spin_offset_x)/coeff1
+      global_character\offset_x = GetGadgetState(#spin_offset_x) / #COEFF_1
     Case #spin_offset_y
-      global_character\offset_y = GetGadgetState(#spin_offset_y)/coeff1
+      global_character\offset_y = GetGadgetState(#spin_offset_y) / #COEFF_1
     Case #Entry_alpha_outline
       If Val(GetGadgetText(#Entry_alpha_outline))>255
         SetGadgetText(#Entry_alpha_outline,"255")
@@ -690,9 +737,9 @@ Procedure open_visualization(image.l)
   If IsImage(image)
     width = ImageWidth(image)
     height = ImageHeight(image)
-    window_visu = OpenWindow(#PB_Any,0,0,width+10,height+10,"Visualisation",#PB_Window_ScreenCentered|#PB_Window_SystemMenu)
-    gadgetimage = ImageGadget(#PB_Any,5,5,width,height,ImageID(image))
-    AddKeyboardShortcut(window_visu,#PB_Shortcut_Escape,#ESC)
+    window_visu = OpenWindow(#PB_Any, 0, 0, width + 10, height + 10, "Visualisation", #PB_Window_ScreenCentered|#PB_Window_SystemMenu)
+    gadgetimage = ImageGadget(#PB_Any, 5, 5, width, height, ImageID(image))
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Escape, #ESC)
     
     Repeat 
       event = WaitWindowEvent()
@@ -708,17 +755,17 @@ Procedure open_visualization(image.l)
 EndProcedure
 
 ;-***** DRAW CANVAS *****
-Procedure draw_character(char$, x, y, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, nb_cursor_color, color1)
-  If nb_cursor_color = 1 ;un seul curseur donc color unique
-                         ;color1 = global_character\color\cursor()\color
-    VectorSourceColor(RGBA(Red(color1),Green(color1),Blue(color1),Alpha(color1) * (alpha/255.0)))
-  EndIf      
-  If nb_cursor_color>1 ;nous avons un degradé car plus d'un curseur
-    If linear_gradient = #PB_Checkbox_Unchecked;dégradé circulaire
-      VectorSourceCircularGradient(x + (character_width/2), y + (character_height/2), radius, gradient_posx, gradient_posy)
+Procedure prepare_char(x, y, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, List cursor._cursor(), nb_cursor_color, color1)
+  If nb_cursor_color = 1 ;one cursor no gradient
+    VectorSourceColor( RGBA( Red(color1), Green(color1), Blue(color1), Alpha(color1) * (alpha / 255.0) ) )
+  ElseIf nb_cursor_color > 1 ;gradient
+    mid_width = character_width / 2
+    mid_height = character_height / 2
+    If linear_gradient = #PB_Checkbox_Unchecked ;circular gradient
+      VectorSourceCircularGradient(x + mid_width, y + mid_height, radius, gradient_posx, gradient_posy)
     Else
-      cx.d = x + gradient_posx + (character_width/2)
-      cy.d = y + gradient_posy + (character_height/2)
+      cx.d = x + gradient_posx + mid_width
+      cy.d = y + gradient_posy + mid_height
       segment = Sqr((character_width * character_width) + (character_height * character_height))
       segment = (segment/2 + (segment * scale))
       x1.d = cx + segment * Cos(angle + #PI)
@@ -727,118 +774,124 @@ Procedure draw_character(char$, x, y, character_width.i, character_height.i, lin
       y2.d = cy + segment * Sin(angle)
       VectorSourceLinearGradient(x1,y1,x2,y2)
     EndIf
-    ForEach global_character\color\cursor()
-      If global_character\color\cursor()\active = #True
-        color = global_character\color\cursor()\color
-        color = RGBA(Red(color),Green(color),Blue(color),Alpha(color) * (alpha/255.0))
-        VectorSourceGradientColor(color,global_character\color\cursor()\position)
+    ForEach cursor()
+      If cursor()\active = #True
+        color = cursor()\color
+        color = RGBA( Red(color), Green(color), Blue(color), Alpha(color) * (alpha  /255.0) )
+        VectorSourceGradientColor(color, cursor()\position)
       EndIf
     Next
     VectorSourceGradientColor(color, 1.0)      
   EndIf
   MovePathCursor(x, y)
+EndProcedure
+
+Procedure draw_character(char$, x, y, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, nb_cursor_color, color1)
+  ;   If nb_cursor_color = 1 ;un seul curseur donc color unique
+  ;                          ;color1 = global_character\color\cursor()\color
+  ;     VectorSourceColor( RGBA( Red(color1), Green(color1), Blue(color1), Alpha(color1) * (alpha / 255.0) ) )
+  ;   EndIf
+  ;   mid_width = character_width / 2
+  ;   mid_height = character_height / 2
+  ;   If nb_cursor_color>1 ;nous avons un degradé car plus d'un curseur
+  ;     If linear_gradient = #PB_Checkbox_Unchecked;dégradé circulaire
+  ;       VectorSourceCircularGradient(x + mid_width, y + mid_height, radius, gradient_posx, gradient_posy)
+  ;     Else
+  ;       cx.d = x + gradient_posx + mid_width
+  ;       cy.d = y + gradient_posy + mid_height
+  ;       segment = Sqr((character_width * character_width) + (character_height * character_height))
+  ;       segment = (segment/2 + (segment * scale))
+  ;       x1.d = cx + segment * Cos(angle + #PI)
+  ;       y1.d = cy + segment * Sin(angle + #PI)
+  ;       x2.d = cx + segment * Cos(angle)
+  ;       y2.d = cy + segment * Sin(angle)
+  ;       VectorSourceLinearGradient(x1,y1,x2,y2)
+  ;     EndIf
+  ;     ForEach global_character\color\cursor()
+  ;       If global_character\color\cursor()\active = #True
+  ;         color = global_character\color\cursor()\color
+  ;         color = RGBA( Red(color), Green(color), Blue(color), Alpha(color) * (alpha  /255.0) )
+  ;         VectorSourceGradientColor(color, global_character\color\cursor()\position)
+  ;       EndIf
+  ;     Next
+  ;     VectorSourceGradientColor(color, 1.0)      
+  ;   EndIf
+  ;   MovePathCursor(x, y)
+  prepare_char(x, y, character_width.d, character_height.d,
+               linear_gradient.b, gradient_posx.d, gradient_posy.d, 
+               radius.i, angle.f, scale.f, 
+               alpha.i, global_character\color\cursor(), nb_cursor_color, color1)
   DrawVectorText(char$)   
 EndProcedure
 
 Procedure draw_canvas(mode=2) 
-  ;recherche de la police sélectionnée
+  Protected char$, char.i, character_width.d, character_height.d, gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d
+  ;select font
   SelectElement(font_system(),GetGadgetState(#Combo_font))
   StartVectorDrawing(CanvasVectorOutput(#canvas_character_view))
-  ;DrawingMode(#PB_2DDrawing_AlphaChannel)
-  ;Box(0,0,480,640,RGB(125,125,125))
-  If zoom\zoom>1.0 ;zoom donc on change le scale
+  If zoom\zoom>1.0 ;zoom
     ScaleCoordinates(zoom\zoom,zoom\zoom)
     TranslateCoordinates(zoom\posx,zoom\posy)
   EndIf
-  ;fond du canvas
+  ;background drawing
   AddPathBox(0,0,GadgetWidth(#canvas_character_view),GadgetHeight(#canvas_character_view))
   VectorSourceColor(RGBA(80,80,80,255))
   FillPath()
-  AddPathBox(0,0,480,640)
+  AddPathBox(0, 0, #CHARACTER_VIEW_WIDTH, #CHARACTER_VIEW_HEIGHT)
   VectorSourceColor(background_color\color)
   FillPath()
-  ;on récupère les données générales pour éco cycle processeur
   If Not IsFont(#font_global_canvas)
     LoadFont(#font_global_canvas, font_system(), font_size_in_view, global_character\style)
   EndIf
-  nb_cursor_color = ListSize(global_character\color\cursor()) ;gradient::get_number_cursor(#gradient_color)
-  nb_curseur_outline = ListSize(global_character\outline\cursor()) ;gradient::get_number_cursor(#gradient_outline)
+  nb_cursor_color = ListSize(global_character\color\cursor())       ;gradient::get_number_cursor(#gradient_color)
+  nb_curseur_outline = ListSize(global_character\outline\cursor())  ;gradient::get_number_cursor(#gradient_outline)
   If ListSize(global_character\color\cursor())>0
     FirstElement(global_character\color\cursor())
     color1 = global_character\color\cursor()\color
+    If global_character\color\linear = #PB_Checkbox_Unchecked
+      gradient_posx = global_character\color\circular_gradient_posx
+      gradient_posy = global_character\color\circular_gradient_posy
+    Else
+      gradient_posx = global_character\color\linear_gradient_posx
+      gradient_posy = global_character\color\linear_gradient_posy      
+    EndIf
   EndIf
   If ListSize(global_character\outline\cursor())>0
     FirstElement(global_character\outline\cursor())
     color_outline1 = global_character\outline\cursor()\color
+    If global_character\color\linear = #PB_Checkbox_Unchecked
+      outline_gradient_posx = global_character\outline\circular_gradient_posx
+      outline_gradient_posy = global_character\outline\circular_gradient_posy
+    Else
+      outline_gradient_posx = global_character\outline\linear_gradient_posx
+      outline_gradient_posy = global_character\outline\linear_gradient_posy      
+    EndIf
   EndIf
-  VectorFont(FontID(#font_global_canvas)) ;on charge la font en vector
-                                          ;parcours de tous les caractères
+  VectorFont(FontID(#font_global_canvas))
   For y=0 To 15
     For x=0 To 15
-      If character((16*y)+x)\selected = #True     ;fond de la case si sélection
-        AddPathBox(x*#CELL_WIDTH, y*#CELL_HEIGHT, #CELL_WIDTH, #CELL_HEIGHT)
+      char = (16 * y) + x
+      char$ = Chr(char)
+      If character(char)\selected = #True    ;If selected cell change background color
+        AddPathBox(x * #CELL_WIDTH, y * #CELL_HEIGHT, #CELL_WIDTH, #CELL_HEIGHT)
         VectorSourceColor(background_color\selected_cell)
         FillPath()
-        AddPathBox(x*#CELL_WIDTH + 1,y*#CELL_HEIGHT+ 1,28,38)
-        VectorSourceColor(RGBA(255,255,255,100))
+        AddPathBox(x * #CELL_WIDTH + 1, y * #CELL_HEIGHT + 1, 28, 38)
+        VectorSourceColor( RGBA(255, 255, 255, 100) )
         StrokePath(2)
       EndIf
-      decal_x.d = (#CELL_WIDTH-VectorTextWidth(Chr((16*y)+x)))/2 + global_character\offset_x ;position du caractère dans la case
-      decal_y.d = (#CELL_HEIGHT-VectorTextHeight(Chr((16*y)+x)))/2 + global_character\offset_y
-      height = VectorTextHeight(Chr((16*y)+x)) / 2
-      If global_character\outline\over <> #PB_Checkbox_Checked ; outline au dessous du texte      
-        draw_outline(x, y, decal_x, decal_y, global_character\offset_x, global_character\offset_y, height, global_character\outline\angle,
-                     global_character\outline\width, nb_curseur_outline, color_outline1)
+      decal_x.d = (#CELL_WIDTH - VectorTextWidth(char$, #PB_VectorText_Visible) ) / 2 + global_character\offset_x ;character position in cell
+      decal_y.d = (#CELL_HEIGHT - VectorTextHeight(char$) ) / 2 + global_character\offset_y
+      If global_character\outline\over <> #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline under character
+        draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
+                     #CELL_WIDTH, #CELL_HEIGHT, 
+                     global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
+                     global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
+                     global_character\outline\width, global_character\outline\path_option,
+                     global_character\outline\alpha, nb_curseur_outline, color_outline1)
       EndIf      
-;                   If nb_cursor_color = 1 ;un seul curseur donc color unique
-;                                           ;color1 = global_character\color\cursor()\color
-;                     VectorSourceColor(RGBA(Red(color1),Green(color1),Blue(color1),Alpha(color1) * (global_character\color\alpha/255.0)))
-;                   EndIf        
-;                   If nb_cursor_color>1 ;nous avons un degradé car plus d'un curseur
-;                     If global_character\color\linear = #PB_Checkbox_Unchecked;dégradé circulaire
-;                       VectorSourceCircularGradient(x*#CELL_WIDTH + 15 + global_character\offset_x, y*#CELL_HEIGHT + decal_y + height + global_character\offset_y,
-;                                                    global_character\color\radius,global_character\color\circular_gradient_posx,global_character\color\circular_gradient_posy)
-;                     EndIf
-;                     If global_character\color\linear = #PB_Checkbox_Checked ;dégradé linéaire
-;                                                                             ;orientation du degrade en fonction de l'angle
-;                       If global_character\color\angle  > 0
-;                         cx.d = x*#CELL_WIDTH + 15 + global_character\color\linear_gradient_posx
-;                         cy.d = y*#CELL_HEIGHT + 20 + global_character\color\linear_gradient_posy
-;                         x1.d = cx + (20 - (#CELL_WIDTH*global_character\color\scale))*Cos(global_character\color\angle + #PI)
-;                         y1.d = cy + (20 - (#CELL_HEIGHT*global_character\color\scale))*Sin(global_character\color\angle + #PI)
-;                         x2.d = cx + (20 + (#CELL_WIDTH*global_character\color\scale))*Cos(global_character\color\angle)
-;                         y2.d = cy + (20 + (#CELL_HEIGHT*global_character\color\scale))*Sin(global_character\color\angle)            
-;                       EndIf
-;                       If global_character\color\angle  = 0 
-;                         x1.d = x*#CELL_WIDTH + global_character\color\linear_gradient_posx - (#CELL_WIDTH*global_character\color\scale)
-;                         y1.d = y*#CELL_HEIGHT + global_character\color\linear_gradient_posy
-;                         x2.d = x*#CELL_WIDTH + #CELL_WIDTH + global_character\color\linear_gradient_posx + (#CELL_WIDTH*global_character\color\scale)
-;                         y2.d = y*#CELL_HEIGHT + global_character\color\linear_gradient_posy
-;                       EndIf
-;                       VectorSourceLinearGradient(x1,y1,x2,y2)
-;                     EndIf
-;                     ForEach global_character\color\cursor()
-;                       If global_character\color\cursor()\active = #True
-;                         color = global_character\color\cursor()\color
-;                         color = RGBA(Red(color),Green(color),Blue(color),Alpha(color) * (global_character\color\alpha/255.0))
-;                         VectorSourceGradientColor(color,global_character\color\cursor()\position)
-;                       EndIf
-;                     Next
-;                     VectorSourceGradientColor(color, 1.0)      
-;                   EndIf
-;                   MovePathCursor(x*#CELL_WIDTH + decal_x, y*#CELL_HEIGHT + decal_y)
-;                   DrawVectorText(Chr((16*y)+x)) 
-      
-      
-      If global_character\color\linear = #PB_Checkbox_Unchecked
-        gradient_posx.d = global_character\color\circular_gradient_posx
-        gradient_posy.d = global_character\color\circular_gradient_posy
-      Else
-        gradient_posx = global_character\color\linear_gradient_posx
-        gradient_posy = global_character\color\linear_gradient_posy      
-      EndIf
-      draw_character(Chr((16*y)+x), x*#CELL_WIDTH + decal_x, y*#CELL_HEIGHT + decal_y,
-                     VectorTextWidth(Chr((16*y)+x), #PB_VectorText_Visible), VectorTextHeight(Chr((16*y)+x)),
+      draw_character(char$, x * #CELL_WIDTH + decal_x, y * #CELL_HEIGHT + decal_y,
+                     VectorTextWidth(char$, #PB_VectorText_Visible), VectorTextHeight(char$),
                      global_character\color\linear, gradient_posx, gradient_posy,
                      global_character\color\radius,
                      global_character\color\angle, 
@@ -847,72 +900,77 @@ Procedure draw_canvas(mode=2)
                      nb_cursor_color, 
                      color1)
       
-      If global_character\outline\over = #PB_Checkbox_Checked ; outline over   
-        draw_outline(x, y, decal_x, decal_y, global_character\outline\offset_x, global_character\outline\offset_y,
-                     height, global_character\outline\angle, global_character\outline\width,
-                     nb_curseur_outline, color_outline1)
+      If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline over character 
+        draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
+                     #CELL_WIDTH, #CELL_HEIGHT, 
+                     global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
+                     global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
+                     global_character\outline\width, global_character\outline\path_option,
+                     global_character\outline\alpha, nb_curseur_outline, color_outline1)
       EndIf        
     Next x
   Next y
   
   For i=0 To 15
-    MovePathCursor(#CELL_WIDTH*i,0)
-    AddPathLine(#CELL_WIDTH*i,640)
-    MovePathCursor(0,#CELL_HEIGHT*i)
-    AddPathLine(480,#CELL_HEIGHT*i)
+    MovePathCursor(#CELL_WIDTH * i, 0)
+    AddPathLine(#CELL_WIDTH * i, #CHARACTER_VIEW_HEIGHT)
+    MovePathCursor(0, #CELL_HEIGHT * i)
+    AddPathLine(#CHARACTER_VIEW_WIDTH, #CELL_HEIGHT * i)
   Next i
-  VectorSourceColor(RGBA(0,0,0,255))
+  VectorSourceColor( RGBA(0, 0, 0, 255) )
   StrokePath(1)
   StopVectorDrawing() 
 EndProcedure
 
-Procedure draw_outline(x, y, decal_x.d, decal_y.d, offset_x.d, offset_y.d, height, angle_degrade_outline.f, size_outline, nb_curseur_outline, color_outline1)    
-  If GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked  ;outline active   
-    If nb_curseur_outline = 1
-      MovePathCursor(x*#CELL_WIDTH + decal_x + global_character\outline\offset_x, y*#CELL_HEIGHT + decal_y + global_character\outline\offset_y)
-      AddPathText(Chr((16*y)+x))
-      ;color = gradient::get_cursor_color()
-      VectorSourceColor(RGBA(Red(color_outline1),Green(color_outline1),Blue(color_outline1),Alpha(color_outline1) * (global_character\outline\alpha/255.0)))
-      StrokePath(size_outline)
-    EndIf  
-    If nb_curseur_outline > 1
-      If global_character\outline\linear = 0 ;dégradé circulaire
-        position_x = x*#CELL_WIDTH + 15 + offset_x
-        position_y = y*#CELL_HEIGHT + height + offset_y
-        VectorSourceCircularGradient(position_x,position_y, global_character\outline\radius, global_character\outline\circular_gradient_posx,global_character\outline\circular_gradient_posy)
-      EndIf
-      If global_character\outline\linear = 1
-        ;orientation du degrade en fonction de l'angle
-        If angle_degrade_outline  > 0
-          cx.d = x*#CELL_WIDTH + 15 + global_character\outline\circular_gradient_posx
-          cy.d = y*#CELL_HEIGHT + 20 + global_character\outline\circular_gradient_posy
-          decal_scale = #CELL_WIDTH * global_character\outline\scale
-          x1.d = cx + (20+size_outline + decal_scale)*Cos(angle_degrade_outline + #PI)
-          y1.d = cy + (20+size_outline + decal_scale)*Sin(angle_degrade_outline + #PI)
-          x2.d = cx + (20+size_outline + decal_scale)*Cos(angle_degrade_outline)
-          y2.d = cy + (20+size_outline + decal_scale)*Sin(angle_degrade_outline)
-        EndIf  
-        If angle_degrade_outline = 0 
-          x1.d = x*#CELL_WIDTH + global_character\outline\circular_gradient_posx - (#CELL_WIDTH * global_character\outline\scale)
-          y1.d = y*#CELL_HEIGHT + global_character\outline\circular_gradient_posy
-          x2.d = x*#CELL_WIDTH + #CELL_WIDTH + global_character\outline\circular_gradient_posx + (#CELL_WIDTH * global_character\outline\scale)
-          y2.d = y*#CELL_HEIGHT + global_character\outline\circular_gradient_posy
-        EndIf
-        VectorSourceLinearGradient(x1,y1,x2,y2)
-      EndIf      
-      ForEach global_character\outline\cursor()
-        If global_character\outline\cursor()\active = #True
-          color = global_character\outline\cursor()\color
-          color = RGBA(Red(color),Green(color),Blue(color),Alpha(color) * (global_character\outline\alpha/255.0))
-          VectorSourceGradientColor(color,global_character\outline\cursor()\position)
-        EndIf
-      Next        
-      VectorSourceGradientColor(color, 1.0)
-      MovePathCursor(x*#CELL_WIDTH + decal_x + global_character\outline\offset_x, y*#CELL_HEIGHT + decal_y + global_character\outline\offset_y)
-      AddPathText(Chr((16*y)+x))
-      StrokePath(size_outline)         
-    EndIf
-  EndIf
+Procedure draw_outline(char$, x, y, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, scale.f, radius.i, angle_degrade_outline.f, size_outline.d, path_option.i, alpha.i, nb_curseur_outline, color_outline1)
+  mid_width.d = character_width / 2
+  mid_height.d = character_height / 2
+;   If nb_curseur_outline = 1
+;     MovePathCursor(x, y)
+;     AddPathText(char$)
+;     ;color = gradient::get_cursor_color()
+;     VectorSourceColor( RGBA( Red(color_outline1),Green(color_outline1),Blue(color_outline1),Alpha(color_outline1) * (alpha / 255.0) ) )
+;     StrokePath(size_outline, #PB_Path_RoundCorner)
+;   EndIf  
+;   If nb_curseur_outline > 1
+;     If linear_gradient = #PB_Checkbox_Unchecked ;circular gradient
+;       VectorSourceCircularGradient(x + mid_width, y + mid_height, radius, gradient_posx, gradient_posy)
+;     Else
+;       If angle_degrade_outline  > 0
+;         cx.d = x * #CELL_WIDTH + mid_cell_width + global_character\outline\circular_gradient_posx
+;         cy.d = y * #CELL_HEIGHT + mid_cell_height + global_character\outline\circular_gradient_posy
+;         decal_scale = #CELL_WIDTH * global_character\outline\scale
+;         x1.d = cx + (mid_cell_height + size_outline + decal_scale) * Cos(angle_degrade_outline + #PI)
+;         y1.d = cy + (mid_cell_height + size_outline + decal_scale) * Sin(angle_degrade_outline + #PI)
+;         x2.d = cx + (mid_cell_height + size_outline + decal_scale) * Cos(angle_degrade_outline)
+;         y2.d = cy + (mid_cell_height + size_outline + decal_scale) * Sin(angle_degrade_outline)
+;       EndIf  
+;       If angle_degrade_outline = 0 
+;         x1.d = x * #CELL_WIDTH + global_character\outline\circular_gradient_posx - (#CELL_WIDTH * global_character\outline\scale)
+;         y1.d = y * #CELL_HEIGHT + global_character\outline\circular_gradient_posy
+;         x2.d = x * #CELL_WIDTH + #CELL_WIDTH + global_character\outline\circular_gradient_posx + (#CELL_WIDTH * global_character\outline\scale)
+;         y2.d = y * #CELL_HEIGHT + global_character\outline\circular_gradient_posy
+;       EndIf
+;       VectorSourceLinearGradient(x1, y1, x2, y2)
+;     EndIf      
+;     ForEach global_character\outline\cursor()
+;       If global_character\outline\cursor()\active = #True
+;         color = global_character\outline\cursor()\color
+;         color = RGBA(Red(color), Green(color), Blue(color), Alpha(color) * (global_character\outline\alpha / 255.0) )
+;         VectorSourceGradientColor(color, global_character\outline\cursor()\position)
+;       EndIf
+;     Next        
+;     VectorSourceGradientColor(color, 1.0)
+;     MovePathCursor(x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y)
+;     AddPathText(char$)
+;     StrokePath(size_outline)         
+;   EndIf
+  prepare_char(x, y, character_width, character_height,
+               linear_gradient, gradient_posx, gradient_posy, 
+               radius, angle_degrade_outline, scale, 
+               alpha, global_character\outline\cursor(), nb_curseur_outline, color_outline1)
+  AddPathText(char$)
+  StrokePath(size_outline, path_option)
 EndProcedure
 
 ;-***** CREATE OUTPUT IMAGE *****
@@ -997,11 +1055,11 @@ Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 po
                        nb_cursor_color, 
                        color1)
         
-        If global_character\outline\over = #PB_Checkbox_Checked ; outline over   
-          draw_outline(x, y, decal_x, decal_y, global_character\outline\offset_x, global_character\outline\offset_y,
-                       height, global_character\outline\angle, global_character\outline\width,
-                       nb_curseur_outline, color_outline1)
-        EndIf       
+;         If global_character\outline\over = #PB_Checkbox_Checked ; outline over   
+;           draw_outline(char$, x, y, decal_x, decal_y, global_character\outline\offset_x, global_character\outline\offset_y,
+;                        height, global_character\outline\angle, global_character\outline\width,
+;                        nb_curseur_outline, color_outline1)
+;         EndIf       
         If mode
           AddElement(export_data())
           export_data()\character = i
@@ -1043,7 +1101,7 @@ Procedure SysInfo_Fonts()
 EndProcedure ;}
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 992
-; FirstLine = 960
-; Folding = ------
+; CursorPosition = 778
+; FirstLine = 757
+; Folding = -------
 ; EnableXP
