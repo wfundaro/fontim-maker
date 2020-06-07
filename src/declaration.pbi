@@ -5,7 +5,7 @@ Declare add_template()
 Declare update_template()
 Declare delete_template()
 Declare draw_canvas(mode=2)
-Declare draw_outline(char$, x, y, character_width.i, character_height.i,
+Declare draw_outline(char$, x.d, y.d, character_width.i, character_height.i,
                      linear_gradient.b, gradient_posx.d, gradient_posy.d,
                      scale.f, radius.i, angle_degrade_outline.f, 
                      size_outline.d, path_option.i, alpha.i, 
@@ -56,7 +56,8 @@ Structure _char_export
   posy.i
   tx.i
   ty.i
-  baseline.i
+  offset_x.i
+  offset_y.i
 EndStructure
 
 Structure _cursor
@@ -107,7 +108,12 @@ EndStructure
 
 Structure _character
   selected.b
-  modification.b  
+  modification.b
+  width_in_image.d
+  height_in_image.d
+  offset_x_in_image.i
+  offset_y_in_image.i
+  top_offset.i
 EndStructure
 
 Structure _language
@@ -154,6 +160,7 @@ Macro Alpha(color)
   color >> 24 & $FF
 EndMacro
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 11
+; CursorPosition = 115
+; FirstLine = 78
 ; Folding = -
 ; EnableXP

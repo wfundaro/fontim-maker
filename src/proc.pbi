@@ -740,7 +740,8 @@ Procedure open_visualization(image.l)
     window_visu = OpenWindow(#PB_Any, 0, 0, width + 10, height + 10, "Visualisation", #PB_Window_ScreenCentered|#PB_Window_SystemMenu)
     gadgetimage = ImageGadget(#PB_Any, 5, 5, width, height, ImageID(image))
     AddKeyboardShortcut(window_visu, #PB_Shortcut_Escape, #ESC)
-    
+    StickyWindow(window_visu, #True)
+    DisableWindow(#Window_0, #True)
     Repeat 
       event = WaitWindowEvent()
       If event = #PB_Event_Menu And EventMenu() = #ESC
@@ -751,11 +752,13 @@ Procedure open_visualization(image.l)
     RemoveKeyboardShortcut(window_visu, #PB_Shortcut_All)
     CloseWindow(window_visu)
     FreeImage(image)
+    DisableWindow(#Window_0, #False)
+    SetActiveWindow(#Window_0)
   EndIf
 EndProcedure
 
 ;-***** DRAW CANVAS *****
-Procedure prepare_char(x, y, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, List cursor._cursor(), nb_cursor_color, color1)
+Procedure prepare_char(x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, List cursor._cursor(), nb_cursor_color, color1)
   If nb_cursor_color = 1 ;one cursor no gradient
     VectorSourceColor( RGBA( Red(color1), Green(color1), Blue(color1), Alpha(color1) * (alpha / 255.0) ) )
   ElseIf nb_cursor_color > 1 ;gradient
@@ -786,37 +789,7 @@ Procedure prepare_char(x, y, character_width.d, character_height.d, linear_gradi
   MovePathCursor(x, y)
 EndProcedure
 
-Procedure draw_character(char$, x, y, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, nb_cursor_color, color1)
-  ;   If nb_cursor_color = 1 ;un seul curseur donc color unique
-  ;                          ;color1 = global_character\color\cursor()\color
-  ;     VectorSourceColor( RGBA( Red(color1), Green(color1), Blue(color1), Alpha(color1) * (alpha / 255.0) ) )
-  ;   EndIf
-  ;   mid_width = character_width / 2
-  ;   mid_height = character_height / 2
-  ;   If nb_cursor_color>1 ;nous avons un degradé car plus d'un curseur
-  ;     If linear_gradient = #PB_Checkbox_Unchecked;dégradé circulaire
-  ;       VectorSourceCircularGradient(x + mid_width, y + mid_height, radius, gradient_posx, gradient_posy)
-  ;     Else
-  ;       cx.d = x + gradient_posx + mid_width
-  ;       cy.d = y + gradient_posy + mid_height
-  ;       segment = Sqr((character_width * character_width) + (character_height * character_height))
-  ;       segment = (segment/2 + (segment * scale))
-  ;       x1.d = cx + segment * Cos(angle + #PI)
-  ;       y1.d = cy + segment * Sin(angle + #PI)
-  ;       x2.d = cx + segment * Cos(angle)
-  ;       y2.d = cy + segment * Sin(angle)
-  ;       VectorSourceLinearGradient(x1,y1,x2,y2)
-  ;     EndIf
-  ;     ForEach global_character\color\cursor()
-  ;       If global_character\color\cursor()\active = #True
-  ;         color = global_character\color\cursor()\color
-  ;         color = RGBA( Red(color), Green(color), Blue(color), Alpha(color) * (alpha  /255.0) )
-  ;         VectorSourceGradientColor(color, global_character\color\cursor()\position)
-  ;       EndIf
-  ;     Next
-  ;     VectorSourceGradientColor(color, 1.0)      
-  ;   EndIf
-  ;   MovePathCursor(x, y)
+Procedure draw_character(char$, x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, nb_cursor_color, color1)
   prepare_char(x, y, character_width.d, character_height.d,
                linear_gradient.b, gradient_posx.d, gradient_posy.d, 
                radius.i, angle.f, scale.f, 
@@ -825,7 +798,7 @@ Procedure draw_character(char$, x, y, character_width.d, character_height.d, lin
 EndProcedure
 
 Procedure draw_canvas(mode=2) 
-  Protected char$, char.i, character_width.d, character_height.d, gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d
+  Protected char$, char.i, character_width.d, character_height.d, gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d, decal_x.d, decal_y.d
   ;select font
   SelectElement(font_system(),GetGadgetState(#Combo_font))
   StartVectorDrawing(CanvasVectorOutput(#canvas_character_view))
@@ -880,18 +853,20 @@ Procedure draw_canvas(mode=2)
         VectorSourceColor( RGBA(255, 255, 255, 100) )
         StrokePath(2)
       EndIf
-      decal_x.d = (#CELL_WIDTH - VectorTextWidth(char$, #PB_VectorText_Visible) ) / 2 + global_character\offset_x ;character position in cell
-      decal_y.d = (#CELL_HEIGHT - VectorTextHeight(char$) ) / 2 + global_character\offset_y
+      character_width = VectorTextWidth(char$, #PB_VectorText_Visible)
+      character_height = VectorTextHeight(char$)
+      decal_x = (#CELL_WIDTH - character_width) / 2 + global_character\offset_x ;character position in cell
+      decal_y = (#CELL_HEIGHT - character_height) / 2 + global_character\offset_y
       If global_character\outline\over <> #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline under character
         draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
-                     #CELL_WIDTH, #CELL_HEIGHT, 
+                     character_width, character_height, 
                      global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                      global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
                      global_character\outline\width, global_character\outline\path_option,
                      global_character\outline\alpha, nb_curseur_outline, color_outline1)
       EndIf      
       draw_character(char$, x * #CELL_WIDTH + decal_x, y * #CELL_HEIGHT + decal_y,
-                     VectorTextWidth(char$, #PB_VectorText_Visible), VectorTextHeight(char$),
+                     character_width, character_height,
                      global_character\color\linear, gradient_posx, gradient_posy,
                      global_character\color\radius,
                      global_character\color\angle, 
@@ -902,7 +877,7 @@ Procedure draw_canvas(mode=2)
       
       If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline over character 
         draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
-                     #CELL_WIDTH, #CELL_HEIGHT, 
+                     character_width, character_height, 
                      global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                      global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
                      global_character\outline\width, global_character\outline\path_option,
@@ -922,49 +897,7 @@ Procedure draw_canvas(mode=2)
   StopVectorDrawing() 
 EndProcedure
 
-Procedure draw_outline(char$, x, y, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, scale.f, radius.i, angle_degrade_outline.f, size_outline.d, path_option.i, alpha.i, nb_curseur_outline, color_outline1)
-  mid_width.d = character_width / 2
-  mid_height.d = character_height / 2
-;   If nb_curseur_outline = 1
-;     MovePathCursor(x, y)
-;     AddPathText(char$)
-;     ;color = gradient::get_cursor_color()
-;     VectorSourceColor( RGBA( Red(color_outline1),Green(color_outline1),Blue(color_outline1),Alpha(color_outline1) * (alpha / 255.0) ) )
-;     StrokePath(size_outline, #PB_Path_RoundCorner)
-;   EndIf  
-;   If nb_curseur_outline > 1
-;     If linear_gradient = #PB_Checkbox_Unchecked ;circular gradient
-;       VectorSourceCircularGradient(x + mid_width, y + mid_height, radius, gradient_posx, gradient_posy)
-;     Else
-;       If angle_degrade_outline  > 0
-;         cx.d = x * #CELL_WIDTH + mid_cell_width + global_character\outline\circular_gradient_posx
-;         cy.d = y * #CELL_HEIGHT + mid_cell_height + global_character\outline\circular_gradient_posy
-;         decal_scale = #CELL_WIDTH * global_character\outline\scale
-;         x1.d = cx + (mid_cell_height + size_outline + decal_scale) * Cos(angle_degrade_outline + #PI)
-;         y1.d = cy + (mid_cell_height + size_outline + decal_scale) * Sin(angle_degrade_outline + #PI)
-;         x2.d = cx + (mid_cell_height + size_outline + decal_scale) * Cos(angle_degrade_outline)
-;         y2.d = cy + (mid_cell_height + size_outline + decal_scale) * Sin(angle_degrade_outline)
-;       EndIf  
-;       If angle_degrade_outline = 0 
-;         x1.d = x * #CELL_WIDTH + global_character\outline\circular_gradient_posx - (#CELL_WIDTH * global_character\outline\scale)
-;         y1.d = y * #CELL_HEIGHT + global_character\outline\circular_gradient_posy
-;         x2.d = x * #CELL_WIDTH + #CELL_WIDTH + global_character\outline\circular_gradient_posx + (#CELL_WIDTH * global_character\outline\scale)
-;         y2.d = y * #CELL_HEIGHT + global_character\outline\circular_gradient_posy
-;       EndIf
-;       VectorSourceLinearGradient(x1, y1, x2, y2)
-;     EndIf      
-;     ForEach global_character\outline\cursor()
-;       If global_character\outline\cursor()\active = #True
-;         color = global_character\outline\cursor()\color
-;         color = RGBA(Red(color), Green(color), Blue(color), Alpha(color) * (global_character\outline\alpha / 255.0) )
-;         VectorSourceGradientColor(color, global_character\outline\cursor()\position)
-;       EndIf
-;     Next        
-;     VectorSourceGradientColor(color, 1.0)
-;     MovePathCursor(x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y)
-;     AddPathText(char$)
-;     StrokePath(size_outline)         
-;   EndIf
+Procedure draw_outline(char$, x.d, y.d, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, scale.f, radius.i, angle_degrade_outline.f, size_outline.d, path_option.i, alpha.i, nb_curseur_outline, color_outline1)
   prepare_char(x, y, character_width, character_height,
                linear_gradient, gradient_posx, gradient_posy, 
                radius, angle_degrade_outline, scale, 
@@ -975,8 +908,9 @@ EndProcedure
 
 ;-***** CREATE OUTPUT IMAGE *****
 Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 pour ne pas avoir de fond
-  Protected tx_img_sortie.i, ty_img_sortie.i
-  Protected size_police.i, style.i, id_font.i, work_image.i, image_mask.i 
+  Protected tx_img_sortie.i, ty_img_sortie.i, gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d
+  Protected size_police.i, style.i, id_font.i, work_image.i, image_mask.i
+  Protected size_outline.d = 0.0, decal_x.d, decal_y.d, ratio_font.d, nb_character_per_line.i = 0
   id_font = LoadFont(#PB_Any,GetGadgetText(#Combo_font), global_character\size, global_character\style)
   If IsFont(id_font)
     ClearList(export_data())
@@ -991,92 +925,182 @@ Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 po
     If ListSize(global_character\color\cursor())>0
       FirstElement(global_character\color\cursor())
       color1 = global_character\color\cursor()\color
+      If global_character\color\linear = #PB_Checkbox_Unchecked
+        gradient_posx = global_character\color\circular_gradient_posx
+        gradient_posy = global_character\color\circular_gradient_posy
+      Else
+        gradient_posx = global_character\color\linear_gradient_posx
+        gradient_posy = global_character\color\linear_gradient_posy      
+      EndIf
     EndIf
     If ListSize(global_character\outline\cursor())>0
       FirstElement(global_character\outline\cursor())
       color_outline1 = global_character\outline\cursor()\color
+      If global_character\color\linear = #PB_Checkbox_Unchecked
+        outline_gradient_posx = global_character\outline\circular_gradient_posx
+        outline_gradient_posy = global_character\outline\circular_gradient_posy
+      Else
+        outline_gradient_posx = global_character\outline\linear_gradient_posx
+        outline_gradient_posy = global_character\outline\linear_gradient_posy      
+      EndIf
     EndIf
-    StartVectorDrawing(ImageVectorOutput(work_image))
+    ratio_font = global_character\size / font_size_in_view
+    If GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked
+      size_outline = global_character\outline\width * ratio_font
+    EndIf
+    StartVectorDrawing(ImageVectorOutput(work_image))    
+    VectorFont(FontID(id_font))
+    nb_character = 0
+    For i=0 To 255 ;on compte le nombre de caractère sélectionné
+      If character(i)\selected = 1
+        nb_character + 1
+        ;calc offset X for drawing character
+        character(i)\offset_x_in_image = size_outline - (global_character\outline\offset_x * ratio_font)
+        ;if offset < 0 , character start at 0
+        If character(i)\offset_x_in_image < 0
+          character(i)\offset_x_in_image = 0 
+        EndIf
+        character(i)\offset_x_in_image - VectorTextWidth(Chr(i), #PB_VectorText_Visible|#PB_VectorText_Offset)
+        character(i)\width_in_image = size_outline + (global_character\outline\offset_x * ratio_font) + VectorTextWidth(Chr(i), #PB_VectorText_Visible)
+        
+        character(i)\offset_y_in_image = size_outline - (global_character\outline\offset_y * ratio_font)
+        If character(i)\offset_y_in_image < 0
+          character(i)\offset_y_in_image = 0
+        EndIf
+        character(i)\offset_y_in_image - VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset)
+        character(i)\height_in_image = size_outline + (global_character\outline\offset_y * ratio_font) + VectorTextHeight(Chr(i), #PB_VectorText_Visible)
+        character(i)\top_offset = VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset); - character(i)\offset_y_in_image
+      EndIf
+    Next
+    If GetGadgetState(#check_auto_size)
+      ;nb_line = Round(Sqr(nb_character), #PB_Round_Nearest)
+      nb_character_per_line = Round(nb_character / Round(Sqr(nb_character), #PB_Round_Nearest), #PB_Round_Up)
+;       limit_line = (character_width_max + 1) * Round(Sqr(nb_character), #PB_Round_Nearest)    
+      ;       max_width_line = (limit_line / character_width_max) * character_width_max
+      ;       max_height_line = ((limit_line / character_height_max) * character_height_max) + character_height_max   
+    Else
+      limit_line = Val(GetGadgetText(#entry_export_size_x_image))
+    EndIf
     If GetGadgetState(#check_image_with_background) = #PB_Checkbox_Checked
-      AddPathBox(0, 0, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE)
+      AddPathBox(0, 0, limit_line, #SIZE_WORK_IMAGE)
       VectorSourceColor(background_color\color)
       FillPath()
     ElseIf mode = 0
       DrawVectorImage(ImageID(#transparent_background_image), 255)
     EndIf
-    
-    VectorFont(FontID(id_font))
-    nb_character = 0
-    For i=0 To 255 ;on compte le nombre de caractère sélectionné
-      If character(i)\selected = 1
-        nb_character+1
-        If character_width_max < VectorTextWidth(Chr(i), #PB_VectorText_Visible)
-          character_width_max = VectorTextWidth(Chr(i), #PB_VectorText_Visible)
-        EndIf
-        If character_height_max < VectorTextHeight(Chr(i))
-          character_height_max = VectorTextHeight(Chr(i))
-        EndIf
-      EndIf
-    Next  
-    If GetGadgetState(#check_auto_size)
-      limit_line = character_width_max * Round(Sqr(nb_character), #PB_Round_Up)      
-      ;       max_width_line = (limit_line / character_width_max) * character_width_max
-      ;       max_height_line = ((limit_line / character_height_max) * character_height_max) + character_height_max   
-    Else
-      limit_line = Val(GetGadgetText(#entry_export_size_x_image))
-    EndIf    
     char_x = 0
     char_y = 0
+    point_x = 0
+    point_y = 0
     max_width_line = 0
+    char_in_line = 1
     For i=0 To 255
       If character(i)\selected
         char$ = Chr(i)
-        char_width = VectorTextWidth(char$, #PB_VectorText_Visible)
-        char_height = VectorTextHeight(char$)
-        char_baseline = VectorTextHeight(char$, #PB_VectorText_Baseline)        
-        If char_x + char_width > limit_line
-          char_x = 0
-          char_y + character_height_max
-        EndIf
-        If global_character\color\linear = #PB_Checkbox_Unchecked
-          gradient_posx.d = global_character\color\circular_gradient_posx
-          gradient_posy.d = global_character\color\circular_gradient_posy
+        If nb_character_per_line = 0
+          If point_x + character(i)\width_in_image + VectorTextWidth(Chr(i), #PB_VectorText_Visible) > limit_line
+            point_x = 0    
+          EndIf
         Else
-          gradient_posx = global_character\color\linear_gradient_posx
-          gradient_posy = global_character\color\linear_gradient_posy      
+          
+          If char_in_line > nb_character_per_line
+            char_in_line = 1
+            point_x = 0
+            point_y = max_character_height_in_line + 1
+          EndIf         
         EndIf
-        draw_character(char$, char_x - VectorTextWidth(char$, #PB_VectorText_Visible|#PB_VectorText_Offset), char_y,
-                       char_width, char_height,
-                       global_character\color\linear, (global_character\size / font_size_in_view) * gradient_posx, (global_character\size / font_size_in_view) * gradient_posy,
-                       (global_character\size / font_size_in_view) * global_character\color\radius,
+        
+        If max_character_height_in_line < point_y + character(i)\height_in_image
+          max_character_height_in_line =  point_y + character(i)\height_in_image 
+        EndIf
+        char_x = point_x + character(i)\offset_x_in_image
+        char_y = point_y + character(i)\offset_y_in_image
+        If global_character\outline\over = #PB_Checkbox_Unchecked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline under   
+          draw_outline(char$, char_x, char_y, 
+                       character(i)\width_in_image, character(i)\height_in_image, 
+                       global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+                       global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
+                       size_outline, global_character\outline\path_option,
+                       global_character\outline\alpha, nb_curseur_outline, color_outline1)
+        EndIf
+
+        AddPathBox(point_x, point_y,character(i)\width_in_image, character(i)\height_in_image)
+        VectorSourceColor(RGBA(255,0,0,255))
+        DashPath(3, 6)
+        
+        
+        
+         draw_character(char$, char_x, char_y, character(i)\width_in_image, character(i)\height_in_image,
+                       global_character\color\linear, gradient_posx * ratio_font, gradient_posy * ratio_font,
+                       global_character\color\radius * ratio_font,
                        global_character\color\angle, 
                        global_character\color\scale, 
                        global_character\color\alpha, 
                        nb_cursor_color, 
-                       color1)
+                       color1)       
         
-;         If global_character\outline\over = #PB_Checkbox_Checked ; outline over   
-;           draw_outline(char$, x, y, decal_x, decal_y, global_character\outline\offset_x, global_character\outline\offset_y,
-;                        height, global_character\outline\angle, global_character\outline\width,
-;                        nb_curseur_outline, color_outline1)
-;         EndIf       
+        
+
+        
+
+        
+        
+        
+        
+        
+        
+;         char_width = VectorTextWidth(char$, #PB_VectorText_Visible)
+;         char_height = VectorTextHeight(char$)
+;         char_baseline = VectorTextHeight(char$, #PB_VectorText_Baseline)        
+;         If char_x + char_width > limit_line
+;           char_x = 0
+;           char_y + character_height_max
+;         EndIf
+;         decal_x = char_x - VectorTextWidth(char$, #PB_VectorText_Visible|#PB_VectorText_Offset) + size_outline
+;         decal_y = char_y + size_outline
+;         If global_character\outline\over = #PB_Checkbox_Unchecked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline under   
+;           draw_outline(char$, decal_x + (global_character\outline\offset_x * ratio_font), decal_y + (global_character\outline\offset_y * ratio_font), 
+;                        char_width, char_height, 
+;                        global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+;                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
+;                        size_outline, global_character\outline\path_option,
+;                        global_character\outline\alpha, nb_curseur_outline, color_outline1)
+;         EndIf
+;         
+;         draw_character(char$, decal_x, decal_y, char_width, char_height,
+;                        global_character\color\linear, gradient_posx * ratio_font, gradient_posy * ratio_font,
+;                        global_character\color\radius * ratio_font,
+;                        global_character\color\angle, 
+;                        global_character\color\scale, 
+;                        global_character\color\alpha, 
+;                        nb_cursor_color, 
+;                        color1)
+;         
+;         If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline over 
+;           draw_outline(char$, decal_x + (global_character\outline\offset_x * ratio_font), decal_y + (global_character\outline\offset_y * ratio_font), 
+;                        char_width, char_height, 
+;                        global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+;                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
+;                        size_outline, global_character\outline\path_option,
+;                        global_character\outline\alpha, nb_curseur_outline, color_outline1)
+;         EndIf
         If mode
           AddElement(export_data())
           export_data()\character = i
-          export_data()\posx = char_x
-          export_data()\posy = char_y
+          export_data()\posx = point_x
+          export_data()\posy = point_y
           export_data()\tx = char_width
           export_data()\ty = char_height
-          export_data()\baseline = char_baseline
         EndIf
-        char_x + char_width + 1
-        If max_width_line < char_x
-          max_width_line = char_x 
+        point_x = point_x + character(i)\width_in_image + 1
+        char_in_line + 1
+        If max_width_line < point_x
+          max_width_line = point_x 
         EndIf
       EndIf
     Next    
     StopVectorDrawing()
-    image_export = GrabImage(work_image,#PB_Any, 0, 0, max_width_line, char_y + character_height_max)
+    image_export = GrabImage(work_image,#PB_Any, 0, 0, max_width_line, point_y + max_character_height_in_line)
     FreeImage(work_image)
     FreeFont(id_font)
     ProcedureReturn image_export
@@ -1101,7 +1125,7 @@ Procedure SysInfo_Fonts()
 EndProcedure ;}
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 778
-; FirstLine = 757
+; CursorPosition = 970
+; FirstLine = 936
 ; Folding = -------
 ; EnableXP
