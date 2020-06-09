@@ -54,7 +54,7 @@ Repeat
           mouse_y = GetGadgetAttribute(#canvas_character_view,#PB_Canvas_MouseY)
           tx_canvas = GadgetWidth(#canvas_character_view)
           ty_canvas = GadgetHeight(#canvas_character_view)
-          num_char = get_char_code(mouse_x, mouse_y)
+          num_char = get_char_code( getColumn(mouse_x), getLine(mouse_y) )
           If tevent = #PB_EventType_LeftButtonDown
             If character(num_char)\selected = 0
               character(num_char)\selected = 1
@@ -102,8 +102,8 @@ Repeat
               redraw = 1
             EndIf
             If GetGadgetAttribute(#canvas_character_view,#PB_Canvas_Modifiers)& #PB_Canvas_Control
-              x = getLine(mouse_x)
-              y = getColumn(mouse_y)
+              x = getColumn(mouse_x)
+              y = getLine(mouse_y)
               If tx_canvas > ty_canvas
                 rapport.f = ty_canvas / 640
               Else
@@ -207,12 +207,12 @@ Repeat
             DisableGadget(#Entry_export_size_y_image,0)
           EndIf
         Case #button_visualization
-          open_visualization(image_creation())          
+          open_visualization()          
       EndSelect
   EndSelect  
 Until event = #PB_Event_CloseWindow
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 175
-; FirstLine = 153
+; CursorPosition = 105
+; FirstLine = 71
 ; Folding = -
 ; EnableXP

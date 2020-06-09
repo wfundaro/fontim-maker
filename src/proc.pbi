@@ -73,7 +73,7 @@ Procedure init_transparent_background_image()
       Else
         bcolor = RGBA(180,180,180,255)
       EndIf
-      AddPathBox(x * pas, y*pas, pas, pas)
+      AddPathBox(x * pas, y * pas, pas, pas)
       VectorSourceColor(bcolor)
       FillPath()
       invert = 1!invert
@@ -84,11 +84,11 @@ Procedure init_transparent_background_image()
 EndProcedure
 
 ;-POSITION AND CHARACTER IN CANVAS
-Procedure.i getLine(mouse_x)
+Procedure.i getColumn(mouse_x)
   ProcedureReturn Int((mouse_x - (zoom\posx * zoom\zoom)) / (#CELL_WIDTH * zoom\zoom))
 EndProcedure
 
-Procedure.i getColumn(mouse_y)
+Procedure.i getLine(mouse_y)
   ProcedureReturn Int((mouse_y - (zoom\posy * zoom\zoom)) / (#CELL_HEIGHT * zoom\zoom))
 EndProcedure
 
@@ -100,8 +100,8 @@ Procedure.d get_convert_position_y(mouse_y)
   ProcedureReturn (mouse_y - (zoom\posy * zoom\zoom)) / (zoom\zoom)  
 EndProcedure
 
-Procedure.i get_char_code(mouse_x, mouse_y)
-  ProcedureReturn ((getColumn(mouse_y) * 16) + getLine(mouse_x))
+Procedure.i get_char_code(column, line)
+  ProcedureReturn ((line * 16) + column)
 EndProcedure
 
 ;-INTERFACE MODIF
@@ -492,7 +492,7 @@ Procedure delete_template()
   DeleteElement(list_template())
   _save_file_template()
 EndProcedure
-;-***** CHARACTERE GLOBAL ***********
+;-***** CHARACTER GLOBAL ***********
 Procedure calcul_size_font_view(mode=2)
   ;{ Calcul de la meilleure size pour afficher le texte en fonction du mode
   Select mode
@@ -732,26 +732,109 @@ Procedure event_gadget(gadget.i)
   draw_canvas()
 EndProcedure
 
+Procedure copy_character_array( Array copy_char._character(1) )
+  For i = 0 To 255
+    copy_char(i)\value = i
+    copy_char(i)\selected = character(i)\selected
+  Next
+EndProcedure
+
+Procedure copy_selected_character_to_array( Array copy_select_char._character(1) )
+  nb_elem = 0
+  For i = 0 To 255
+    If character(i)\selected
+      copy_select_char(nb_elem)\selected = character(i)\selected
+      copy_select_char(nb_elem)\value = i
+      nb_elem + 1
+    EndIf
+  Next
+  ReDim copy_select_char(nb_elem)
+  ProcedureReturn nb_elem
+EndProcedure
+
 ;-***** VISUALISATION *****
-Procedure open_visualization(image.l)
+Procedure keyboard_resize_visualization(window.i, direction)
+  Protected x.i = 0, y.i = 0
+  Select direction
+    Case #VISUALIZATION_SHORTCUT_LEFT
+      x - 1  
+    Case #VISUALIZATION_SHORTCUT_RIGHT
+      x + 1
+    Case #VISUALIZATION_SHORTCUT_UP
+      y - 1
+    Case #VISUALIZATION_SHORTCUT_DOWN        
+      y + 1
+  EndSelect
+  If x + y <> 0
+    ResizeWindow(window, #PB_Ignore, #PB_Ignore, WindowWidth(window) + x, WindowHeight(window) + y)
+  EndIf
+EndProcedure
+
+Procedure open_visualization()
+  Dim copy_char._character(256)
+  ;copy_character_array(copy_char())
+  copy_selected_character_to_array(copy_char())
+  image = image_creation(copy_char())
   If IsImage(image)
     width = ImageWidth(image)
     height = ImageHeight(image)
-    window_visu = OpenWindow(#PB_Any, 0, 0, width + 10, height + 10, "Visualisation", #PB_Window_ScreenCentered|#PB_Window_SystemMenu)
+    window_visu = OpenWindow(#PB_Any, 0, 0, width + 10, height + 10, "Auto size " + Str(width) + " : " + Str(height), #PB_Window_ScreenCentered|#PB_Window_SystemMenu|#PB_Window_SizeGadget)
     gadgetimage = ImageGadget(#PB_Any, 5, 5, width, height, ImageID(image))
-    AddKeyboardShortcut(window_visu, #PB_Shortcut_Escape, #ESC)
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Escape, #VISUALIZATION_SHORTCUT_ESC)
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Control | #PB_Shortcut_Left, #VISUALIZATION_SHORTCUT_LEFT)
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Control | #PB_Shortcut_Right, #VISUALIZATION_SHORTCUT_RIGHT)
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Control | #PB_Shortcut_Up, #VISUALIZATION_SHORTCUT_UP)
+    AddKeyboardShortcut(window_visu, #PB_Shortcut_Control | #PB_Shortcut_Down, #VISUALIZATION_SHORTCUT_DOWN)
     StickyWindow(window_visu, #True)
     DisableWindow(#Window_0, #True)
+    end_of_visu.b = #False
     Repeat 
       event = WaitWindowEvent()
-      If event = #PB_Event_Menu And EventMenu() = #ESC
-        event = #PB_Event_CloseWindow
-      EndIf
-    Until event = #PB_Event_CloseWindow
+      Select event
+        Case #PB_Event_Menu
+          Select EventMenu()
+            Case #VISUALIZATION_SHORTCUT_ESC
+              end_of_visu = #True
+            Case #VISUALIZATION_SHORTCUT_LEFT
+              keyboard_resize_visualization(window_visu, #VISUALIZATION_SHORTCUT_LEFT)
+            Case #VISUALIZATION_SHORTCUT_RIGHT
+              keyboard_resize_visualization(window_visu, #VISUALIZATION_SHORTCUT_RIGHT)
+            Case #VISUALIZATION_SHORTCUT_UP
+              keyboard_resize_visualization(window_visu, #VISUALIZATION_SHORTCUT_UP)
+            Case #VISUALIZATION_SHORTCUT_DOWN
+              keyboard_resize_visualization(window_visu, #VISUALIZATION_SHORTCUT_DOWN)
+          EndSelect
+        Case #PB_Event_CloseWindow
+          end_of_visu = #True
+        Case #PB_Event_SizeWindow
+          SetGadgetState(#check_auto_size, #PB_Checkbox_Unchecked)
+          DisableGadget(#entry_export_size_x_image, #False)
+          DisableGadget(#entry_export_size_y_image, #False)
+          new_width = WindowWidth(window_visu) - 10
+          new_height = WindowHeight(window_visu) - 10
+          ResizeGadget(gadgetimage, #PB_Ignore, #PB_Ignore, new_width, new_height)
+          SetGadgetText(#entry_export_size_x_image, Str(new_width))
+          SetGadgetText(#entry_export_size_y_image, Str(new_height))
+          If IsImage(image)
+            FreeImage(image)
+          EndIf
+          image = image_creation(copy_char(), #MODE_AUTO_RESIZE)
+          SetGadgetState(gadgetimage, ImageID(image))
+          ResizeWindow(window_visu, #PB_Ignore, #PB_Ignore, ImageWidth(image) + 10, ImageHeight(image) + 10 )
+          SetWindowTitle(window_visu,  "Auto size " + Str(width) + " : " + Str(height) + " new " + Str(GadgetWidth(gadgetimage)) + " : " + Str(GadgetHeight(gadgetimage)) )
+      EndSelect      
+    Until end_of_visu = #True
     FreeGadget(gadgetimage)
     RemoveKeyboardShortcut(window_visu, #PB_Shortcut_All)
+    RemoveKeyboardShortcut(window_visu, #VISUALIZATION_SHORTCUT_LEFT)
+    RemoveKeyboardShortcut(window_visu, #VISUALIZATION_SHORTCUT_RIGHT)
+    RemoveKeyboardShortcut(window_visu, #VISUALIZATION_SHORTCUT_UP)
+    RemoveKeyboardShortcut(window_visu, #VISUALIZATION_SHORTCUT_DOWN)
     CloseWindow(window_visu)
-    FreeImage(image)
+    If IsImage(image)
+      FreeImage(image)
+    EndIf
+    FreeArray(copy_char())
     DisableWindow(#Window_0, #False)
     SetActiveWindow(#Window_0)
   EndIf
@@ -843,7 +926,7 @@ Procedure draw_canvas(mode=2)
   VectorFont(FontID(#font_global_canvas))
   For y=0 To 15
     For x=0 To 15
-      char = (16 * y) + x
+      char = get_char_code(x, y)
       char$ = Chr(char)
       If character(char)\selected = #True    ;If selected cell change background color
         AddPathBox(x * #CELL_WIDTH, y * #CELL_HEIGHT, #CELL_WIDTH, #CELL_HEIGHT)
@@ -907,18 +990,81 @@ Procedure draw_outline(char$, x.d, y.d, character_width.i, character_height.i, l
 EndProcedure
 
 ;-***** CREATE OUTPUT IMAGE *****
-Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 pour ne pas avoir de fond
-  Protected tx_img_sortie.i, ty_img_sortie.i, gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d
-  Protected size_police.i, style.i, id_font.i, work_image.i, image_mask.i
-  Protected size_outline.d = 0.0, decal_x.d, decal_y.d, ratio_font.d, nb_character_per_line.i = 0
+Procedure character_distribution_calculation(Array copy_char._character(1), *nb_char_per_line)
+  nb_character_per_line = PeekI(*nb_char_per_line)
+  count_char = 1
+  max_width_line = 0
+  width_line = 0
+  max_height_line = 0
+  height_line = 0
+  For i=0 To ArraySize( copy_char() ) - 1    
+    If copy_char(i)\selected = 1
+      If count_char > nb_character_per_line
+        count_char = 1
+        width_line = 0
+        height_line = height_line + max_height_line
+        max_height_line = 0
+      EndIf
+      width_line = width_line + copy_char(i)\width_in_image + 1
+      If max_height_line < copy_char(i)\height_in_image
+        max_height_line = copy_char(i)\height_in_image
+      EndIf      
+      If max_width_line < width_line
+        max_width_line = width_line
+      EndIf
+      count_char + 1
+    EndIf
+  Next
+  
+  ratio.f = height_line / (max_width_line + 0.0)
+  If  ratio > 1.1
+    nb_character_per_line + ((ratio - 1) * 10)
+  ElseIf ratio < 0.9
+    nb_character_per_line - 1
+  ElseIf ratio < 0.8
+    nb_character_per_line - 2
+  EndIf 
+  
+  PokeI(*nb_char_per_line, nb_character_per_line)
+  ProcedureReturn max_width_line
+EndProcedure
+
+Procedure prepare_position_element(Array copy_char._character(1))
+  nb_character = 0
+    For i=0 To ArraySize(copy_char() ) - 1   ;on compte le nombre de caractère sélectionné
+      If copy_char(i)\selected = 1
+        nb_character + 1
+        copy_char(i)\offset_x_outline_in_image = (global_character\outline\offset_x * ratio_font)
+        copy_char(i)\offset_y_outline_in_image = (global_character\outline\offset_y * ratio_font)
+        ;calc offset X for drawing character
+        copy_char(i)\offset_x_in_image = size_outline - copy_char(i)\offset_x_outline_in_image
+        ;if offset < 0 , character start at 0
+        If copy_char(i)\offset_x_in_image < 0
+          copy_char(i)\offset_x_in_image = 0 
+        EndIf
+        copy_char(i)\offset_x_in_image - VectorTextWidth(Chr(i), #PB_VectorText_Visible|#PB_VectorText_Offset)
+        copy_char(i)\width_in_image = size_outline*1.8 + Abs(copy_char(i)\offset_x_outline_in_image) + VectorTextWidth(Chr(i), #PB_VectorText_Visible)
+        copy_char(i)\left_offset = copy_char(i)\offset_x_in_image
+        
+        copy_char(i)\offset_y_in_image = size_outline - copy_char(i)\offset_y_outline_in_image
+        If copy_char(i)\offset_y_in_image < 0
+          copy_char(i)\offset_y_in_image = 0
+        EndIf
+        copy_char(i)\top_offset = VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset) - copy_char(i)\offset_y_in_image
+        copy_char(i)\offset_y_in_image - VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset)
+        copy_char(i)\height_in_image = size_outline*1.8 + Abs(copy_char(i)\offset_y_outline_in_image) + VectorTextHeight(Chr(i), #PB_VectorText_Visible)
+      EndIf
+    Next
+    ProcedureReturn nb_character
+EndProcedure
+
+Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZATION) ; visualization, auto resize, export
+  Protected gradient_posx.d, gradient_posy.d, outline_gradient_posx.d, outline_gradient_posy.d
+  Protected id_font.i, work_image.i
+  Protected size_outline.d = 0.0, ratio_font.d, nb_character_per_line.i = 0
   id_font = LoadFont(#PB_Any,GetGadgetText(#Combo_font), global_character\size, global_character\style)
   If IsFont(id_font)
     ClearList(export_data())
-    ;on modifie le style en fonction des checkbox
-    style = #PB_Font_HighQuality
-    If GetGadgetState(#check_bold) : style|#PB_Font_Bold : EndIf
-    If GetGadgetState(#check_italic) : style|#PB_Font_Italic : EndIf
-    If GetGadgetState(#check_underline) : style|#PB_Font_Underline : EndIf
     work_image = CreateImage(#PB_Any, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE, 32)
     nb_cursor_color = ListSize(global_character\color\cursor()) ;gradient::get_number_cursor(#gradient_color)
     nb_curseur_outline = ListSize(global_character\outline\cursor()) ;gradient::get_number_cursor(#gradient_outline)
@@ -950,42 +1096,25 @@ Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 po
     EndIf
     StartVectorDrawing(ImageVectorOutput(work_image))    
     VectorFont(FontID(id_font))
-    nb_character = 0
-    For i=0 To 255 ;on compte le nombre de caractère sélectionné
-      If character(i)\selected = 1
-        nb_character + 1
-        ;calc offset X for drawing character
-        character(i)\offset_x_in_image = size_outline - (global_character\outline\offset_x * ratio_font)
-        ;if offset < 0 , character start at 0
-        If character(i)\offset_x_in_image < 0
-          character(i)\offset_x_in_image = 0 
-        EndIf
-        character(i)\offset_x_in_image - VectorTextWidth(Chr(i), #PB_VectorText_Visible|#PB_VectorText_Offset)
-        character(i)\width_in_image = size_outline + (global_character\outline\offset_x * ratio_font) + VectorTextWidth(Chr(i), #PB_VectorText_Visible)
-        
-        character(i)\offset_y_in_image = size_outline - (global_character\outline\offset_y * ratio_font)
-        If character(i)\offset_y_in_image < 0
-          character(i)\offset_y_in_image = 0
-        EndIf
-        character(i)\offset_y_in_image - VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset)
-        character(i)\height_in_image = size_outline + (global_character\outline\offset_y * ratio_font) + VectorTextHeight(Chr(i), #PB_VectorText_Visible)
-        character(i)\top_offset = VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset); - character(i)\offset_y_in_image
-      EndIf
-    Next
-    If GetGadgetState(#check_auto_size)
-      ;nb_line = Round(Sqr(nb_character), #PB_Round_Nearest)
+    nb_character = prepare_position_element(copy_char())
+    If GetGadgetState(#check_auto_size) = #PB_Checkbox_Checked
       nb_character_per_line = Round(nb_character / Round(Sqr(nb_character), #PB_Round_Nearest), #PB_Round_Up)
-;       limit_line = (character_width_max + 1) * Round(Sqr(nb_character), #PB_Round_Nearest)    
-      ;       max_width_line = (limit_line / character_width_max) * character_width_max
-      ;       max_height_line = ((limit_line / character_height_max) * character_height_max) + character_height_max   
+      For u=0 To 5
+        limit_line = character_distribution_calculation(copy_char(), @nb_character_per_line)
+      Next  
     Else
+      nb_character_per_line = 0
       limit_line = Val(GetGadgetText(#entry_export_size_x_image))
     EndIf
+    
+    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\width_in_image), TypeOf(_character\width_in_image))
+    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\height_in_image), TypeOf(_character\height_in_image))
+    
     If GetGadgetState(#check_image_with_background) = #PB_Checkbox_Checked
-      AddPathBox(0, 0, limit_line, #SIZE_WORK_IMAGE)
+      AddPathBox(0, 0, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE)
       VectorSourceColor(background_color\color)
       FillPath()
-    ElseIf mode = 0
+    ElseIf mode < #MODE_EXPORT
       DrawVectorImage(ImageID(#transparent_background_image), 255)
     EndIf
     char_x = 0
@@ -994,113 +1123,97 @@ Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 po
     point_y = 0
     max_width_line = 0
     char_in_line = 1
-    For i=0 To 255
-      If character(i)\selected
-        char$ = Chr(i)
+    For i=0 To ArraySize( copy_char() ) - 1
+      If copy_char(i)\selected
+        char$ = Chr(copy_char(i)\value)
         If nb_character_per_line = 0
-          If point_x + character(i)\width_in_image + VectorTextWidth(Chr(i), #PB_VectorText_Visible) > limit_line
+          If point_x + copy_char(i)\width_in_image > limit_line
             point_x = 0    
+            point_y = point_y + max_character_height_in_line + 1
+            max_character_height_in_line = 0
           EndIf
-        Else
-          
+        Else          
           If char_in_line > nb_character_per_line
-            char_in_line = 1
-            point_x = 0
-            point_y = max_character_height_in_line + 1
+            If point_x + copy_char(i)\width_in_image > limit_line
+              char_in_line = 1
+              point_x = 0
+              point_y = point_y + max_character_height_in_line + 1
+              max_character_height_in_line = 0
+            EndIf
           EndIf         
         EndIf
         
-        If max_character_height_in_line < point_y + character(i)\height_in_image
-          max_character_height_in_line =  point_y + character(i)\height_in_image 
+        If max_character_height_in_line < copy_char(i)\height_in_image
+          max_character_height_in_line =  copy_char(i)\height_in_image 
         EndIf
-        char_x = point_x + character(i)\offset_x_in_image
-        char_y = point_y + character(i)\offset_y_in_image
+        char_x = point_x + copy_char(i)\offset_x_in_image
+        char_y = point_y + copy_char(i)\offset_y_in_image
         If global_character\outline\over = #PB_Checkbox_Unchecked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline under   
-          draw_outline(char$, char_x, char_y, 
-                       character(i)\width_in_image, character(i)\height_in_image, 
+          draw_outline(char$, char_x + copy_char(i)\offset_x_outline_in_image, char_y + copy_char(i)\offset_y_outline_in_image, 
+                       copy_char(i)\width_in_image, copy_char(i)\height_in_image, 
                        global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
                        size_outline, global_character\outline\path_option,
-                       global_character\outline\alpha, nb_curseur_outline, color_outline1)
+                       global_character\outline\alpha, nb_curseur_outline, color_outline1)          
         EndIf
-
-        AddPathBox(point_x, point_y,character(i)\width_in_image, character(i)\height_in_image)
-        VectorSourceColor(RGBA(255,0,0,255))
-        DashPath(3, 6)
         
+        If mode < #MODE_EXPORT
+          AddPathBox(point_x, point_y,copy_char(i)\width_in_image, copy_char(i)\height_in_image)
+          VectorSourceColor(RGBA(255,0,0,255))
+          DashPath(3, 6)
+        EndIf        
         
-        
-         draw_character(char$, char_x, char_y, character(i)\width_in_image, character(i)\height_in_image,
+        draw_character(char$, char_x, char_y, copy_char(i)\width_in_image, copy_char(i)\height_in_image,
                        global_character\color\linear, gradient_posx * ratio_font, gradient_posy * ratio_font,
                        global_character\color\radius * ratio_font,
                        global_character\color\angle, 
                        global_character\color\scale, 
                        global_character\color\alpha, 
                        nb_cursor_color, 
-                       color1)       
+                       color1) 
+                
+        If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline over 
+          draw_outline(char$, char_x + copy_char(i)\offset_x_outline_in_image, char_y + copy_char(i)\offset_y_outline_in_image, 
+                       copy_char(i)\width_in_image, copy_char(i)\height_in_image, 
+                       global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+                       global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
+                       size_outline, global_character\outline\path_option,
+                       global_character\outline\alpha, nb_curseur_outline, color_outline1)
+        EndIf      
         
-        
-
-        
-
-        
-        
-        
-        
-        
-        
-;         char_width = VectorTextWidth(char$, #PB_VectorText_Visible)
-;         char_height = VectorTextHeight(char$)
-;         char_baseline = VectorTextHeight(char$, #PB_VectorText_Baseline)        
-;         If char_x + char_width > limit_line
-;           char_x = 0
-;           char_y + character_height_max
-;         EndIf
-;         decal_x = char_x - VectorTextWidth(char$, #PB_VectorText_Visible|#PB_VectorText_Offset) + size_outline
-;         decal_y = char_y + size_outline
-;         If global_character\outline\over = #PB_Checkbox_Unchecked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline under   
-;           draw_outline(char$, decal_x + (global_character\outline\offset_x * ratio_font), decal_y + (global_character\outline\offset_y * ratio_font), 
-;                        char_width, char_height, 
-;                        global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
-;                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
-;                        size_outline, global_character\outline\path_option,
-;                        global_character\outline\alpha, nb_curseur_outline, color_outline1)
-;         EndIf
-;         
-;         draw_character(char$, decal_x, decal_y, char_width, char_height,
-;                        global_character\color\linear, gradient_posx * ratio_font, gradient_posy * ratio_font,
-;                        global_character\color\radius * ratio_font,
-;                        global_character\color\angle, 
-;                        global_character\color\scale, 
-;                        global_character\color\alpha, 
-;                        nb_cursor_color, 
-;                        color1)
-;         
-;         If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline over 
-;           draw_outline(char$, decal_x + (global_character\outline\offset_x * ratio_font), decal_y + (global_character\outline\offset_y * ratio_font), 
-;                        char_width, char_height, 
-;                        global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
-;                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
-;                        size_outline, global_character\outline\path_option,
-;                        global_character\outline\alpha, nb_curseur_outline, color_outline1)
-;         EndIf
-        If mode
+        If mode = #MODE_EXPORT
           AddElement(export_data())
           export_data()\character = i
+          ;position in image
           export_data()\posx = point_x
           export_data()\posy = point_y
-          export_data()\tx = char_width
-          export_data()\ty = char_height
+          ;size
+          export_data()\sx = copy_char(i)\width_in_image
+          export_data()\sy = copy_char(i)\height_in_image
+          ;offset character for correctly positionning in game/application
+          export_data()\offset_x = copy_char(i)\left_offset
+          export_data()\offset_y = copy_char(i)\top_offset
         EndIf
-        point_x = point_x + character(i)\width_in_image + 1
+        point_x = point_x + copy_char(i)\width_in_image + 1
         char_in_line + 1
         If max_width_line < point_x
           max_width_line = point_x 
         EndIf
       EndIf
-    Next    
+    Next
     StopVectorDrawing()
-    image_export = GrabImage(work_image,#PB_Any, 0, 0, max_width_line, point_y + max_character_height_in_line)
+    If GetGadgetState(#check_auto_size) = #PB_Checkbox_Checked
+      width_image_export = max_width_line
+      height_image_export = point_y + max_character_height_in_line      
+    Else
+      If mode = #MODE_AUTO_RESIZE
+        height_image_export = point_y + max_character_height_in_line
+      Else
+        height_image_export = Val(GetGadgetText(#entry_export_size_y_image))
+      EndIf
+      width_image_export = limit_line
+    EndIf
+    image_export = GrabImage(work_image,#PB_Any, 0, 0, width_image_export, height_image_export)
     FreeImage(work_image)
     FreeFont(id_font)
     ProcedureReturn image_export
@@ -1108,8 +1221,14 @@ Procedure.l image_creation(mode = 0) ;mode visu = 0 à l'export on met mode 1 po
   ProcedureReturn -1
 EndProcedure
 
-;-***** ENUMERATION FONT SYSTEM *****
-;{ procédure d'énumération des polices système
+;-***** EXPORT IMAGE AND DATA *****
+Procedure export()
+  
+EndProcedure
+
+
+;-***** SYSTEM FONT ENUMERATION *****
+;{ system font enumeration procedure
 Procedure EnumFontFamProc(*lpelf.ENUMLOGFONT, *lpntm.NEWTEXTMETRIC, FontType, lParam)
   AddElement(font_system())
   font_system()= PeekS(@*lpelf\elfLogFont\lfFaceName[0])
@@ -1125,7 +1244,7 @@ Procedure SysInfo_Fonts()
 EndProcedure ;}
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 970
-; FirstLine = 936
-; Folding = -------
+; CursorPosition = 1031
+; FirstLine = 1031
+; Folding = --------
 ; EnableXP

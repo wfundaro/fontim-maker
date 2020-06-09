@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2020-06-06 18:44" user="Developper" host="DESKTOP-M1J9HL8"/>
+    <lastopen date="2020-06-08 15:15" user="Developper" host="DESKTOP-M1J9HL8"/>
   </section>
   <section name="files">
     <file name="main.pb">
@@ -16,7 +16,7 @@
     </file>
     <file name="src\declaration.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="73f6eecdc2fc6531d4020a3190b095ef"/>
+      <fingerprint md5="8c5794a1c4791d98cff28645b0d0944d"/>
     </file>
     <file name="src\interface_fm.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
@@ -28,7 +28,7 @@
     </file>
     <file name="src\proc.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="61528f9fc9dcff91c2b9ebdd90da67a7"/>
+      <fingerprint md5="2687a5f520378fb38cb6b8338a1fa134"/>
     </file>
   </section>
   <section name="targets">

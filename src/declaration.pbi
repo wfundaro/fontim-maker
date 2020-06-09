@@ -1,22 +1,4 @@
-﻿;-DECLARE
-Declare quit()
-Declare change_language()
-Declare add_template()
-Declare update_template()
-Declare delete_template()
-Declare draw_canvas(mode=2)
-Declare draw_outline(char$, x.d, y.d, character_width.i, character_height.i,
-                     linear_gradient.b, gradient_posx.d, gradient_posy.d,
-                     scale.f, radius.i, angle_degrade_outline.f, 
-                     size_outline.d, path_option.i, alpha.i, 
-                     nb_curseur_outline, color_outline1) 
-Declare update_option_gradient_color()
-Declare update_option_gradient_outline()
-Declare update_option_character_gradient_color()
-Declare update_option_character_gradient_outline()
-Declare resize_window()
-Declare calcul_size_font_view(mode=2)
-
+﻿
 #transparent_background_image = 51
 #SIZE_WORK_IMAGE = 4096
 #CELL_WIDTH = 30
@@ -25,6 +7,20 @@ Declare calcul_size_font_view(mode=2)
 #COEFF_2 = 100.0
 #CHARACTER_VIEW_WIDTH = 480.0
 #CHARACTER_VIEW_HEIGHT = 640.0
+
+Enumeration 101
+  #VISUALIZATION_SHORTCUT_ESC
+  #VISUALIZATION_SHORTCUT_LEFT
+  #VISUALIZATION_SHORTCUT_RIGHT
+  #VISUALIZATION_SHORTCUT_UP
+  #VISUALIZATION_SHORTCUT_DOWN
+EndEnumeration
+
+Enumeration
+  #MODE_VISUALIZATION
+  #MODE_AUTO_RESIZE
+  #MODE_EXPORT
+EndEnumeration
 
 Enumeration #PB_Event_FirstCustomValue
   #pb_event_gradient  
@@ -54,8 +50,8 @@ Structure _char_export
   character.b
   posx.i
   posy.i
-  tx.i
-  ty.i
+  sx.i
+  sy.i
   offset_x.i
   offset_y.i
 EndStructure
@@ -106,14 +102,21 @@ Structure _global_character
   outline._character_outline
 EndStructure
 
-Structure _character
-  selected.b
+Structure _character_selection
+  selected.b  
+EndStructure
+
+Structure _character Extends _character_selection
+  value.b
   modification.b
   width_in_image.d
   height_in_image.d
   offset_x_in_image.i
   offset_y_in_image.i
+  offset_x_outline_in_image.i
+  offset_y_outline_in_image.i
   top_offset.i
+  left_offset.i
 EndStructure
 
 Structure _language
@@ -133,8 +136,8 @@ EndStructure
 
 Global NewList font_system.s() ;system font list
 Global NewList list_template._template_data() ;list of template data
-Global Dim character._character(256)              ;selected character
-Global zoom._zoom                                 ; variable pour le zoom de l'affichage
+Global Dim character._character_selection(256)          ;selected character
+Global zoom._zoom                             ; variable pour le zoom de l'affichage
 Global background_color._color_canvas_view_character ;couleur du fond dans l'affichage principal
 Global font_size_in_view.i
 Global NewList language._language() ;list of language files
@@ -159,8 +162,27 @@ EndMacro
 Macro Alpha(color)
   color >> 24 & $FF
 EndMacro
+
+;-DECLARE
+Declare quit()
+Declare change_language()
+Declare add_template()
+Declare update_template()
+Declare delete_template()
+Declare draw_canvas(mode=2)
+Declare draw_outline(char$, x.d, y.d, character_width.i, character_height.i,
+                     linear_gradient.b, gradient_posx.d, gradient_posy.d,
+                     scale.f, radius.i, angle_degrade_outline.f, 
+                     size_outline.d, path_option.i, alpha.i, 
+                     nb_curseur_outline, color_outline1) 
+Declare update_option_gradient_color()
+Declare update_option_gradient_outline()
+Declare update_option_character_gradient_color()
+Declare update_option_character_gradient_outline()
+Declare resize_window()
+Declare calcul_size_font_view(mode=2)
+Declare.l image_creation(Array copy_char._character(1), mode = 0)
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 115
-; FirstLine = 78
+; CursorPosition = 21
 ; Folding = -
 ; EnableXP
