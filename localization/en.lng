@@ -59,7 +59,7 @@ button_save_template = Save
 button_add_template = New
 button_delete_template = Delete
 frame_output_data = Export Format
-info_format_data_001 = EX :  name_%i,%x,%y,%sizex,%sizey
+info_format_data_001 = %ox, %oy -> offsetX, offsetY
 info_format_data_002 = %i  -> To add an increment
 info_format_data_003 = %asc -> Adds the ascii character value
 info_format_data_004 = %chr -> character
@@ -92,3 +92,6 @@ check_square_end = Square end of outline
 check_round_end = Round end of outline
 check_diagonal_corner = Corner of diagonal outline
 check_rounded_corner = Corner of rounded outline
+
+[Requester]
+select_export_directory = Choose a directory

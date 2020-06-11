@@ -26,6 +26,10 @@ Enumeration #PB_Event_FirstCustomValue
   #pb_event_gradient  
 EndEnumeration
 
+;-PREFERENCE CONSTANT
+#PREFERENCE_LANGUAGE = "Language"
+#PREFERENCE_TEMPLATE = "Template"
+#PREFERENCE_PROJECT_PATH = "Project_path"
 ;-STRUCTURE
 Structure _template_data
   name.s
@@ -65,7 +69,7 @@ EndStructure
 Structure _character_color
   linear.b
   radius.i
-  scale.f
+  scale.d
   linear_gradient_posx.d
   linear_gradient_posy.d
   circular_gradient_posx.d
@@ -111,6 +115,10 @@ Structure _character Extends _character_selection
   modification.b
   width_in_image.d
   height_in_image.d
+  character_width.d
+  character_height.d
+  outline_width.d
+  outline_height.d
   offset_x_in_image.i
   offset_y_in_image.i
   offset_x_outline_in_image.i
@@ -146,6 +154,9 @@ Global NewMap language_text.s()
 Global global_character._global_character
 Global extension_file._extension_file
 Global NewList export_data._char_export()
+Global export_path$ = "" ;path of export image and data
+Global project_path$ = "" ; path of load/save project
+
 zoom\posx = 0
 zoom\posy = 0
 zoom\zoom = 1.0
@@ -163,6 +174,8 @@ Macro Alpha(color)
   color >> 24 & $FF
 EndMacro
 
+UsePNGImageEncoder()
+UseJPEGImageEncoder()
 ;-DECLARE
 Declare quit()
 Declare change_language()
@@ -172,7 +185,7 @@ Declare delete_template()
 Declare draw_canvas(mode=2)
 Declare draw_outline(char$, x.d, y.d, character_width.i, character_height.i,
                      linear_gradient.b, gradient_posx.d, gradient_posy.d,
-                     scale.f, radius.i, angle_degrade_outline.f, 
+                     scale.d, radius.i, angle_degrade_outline.f, 
                      size_outline.d, path_option.i, alpha.i, 
                      nb_curseur_outline, color_outline1) 
 Declare update_option_gradient_color()
@@ -182,7 +195,9 @@ Declare update_option_character_gradient_outline()
 Declare resize_window()
 Declare calcul_size_font_view(mode=2)
 Declare.l image_creation(Array copy_char._character(1), mode = 0)
+Declare.s _export_image_data(Array copy_char._character(1), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment = 0)
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 21
+; CursorPosition = 116
+; FirstLine = 80
 ; Folding = -
 ; EnableXP

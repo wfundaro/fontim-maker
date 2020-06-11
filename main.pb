@@ -188,16 +188,16 @@ Repeat
           EndIf
         Case #check_file_name_text
           If GetGadgetState(#check_file_name_text) = #PB_Checkbox_Checked
-            DisableGadget(#entry_file_name_text,1)
+            DisableGadget(#entry_data_file_name,1)
           Else
-            DisableGadget(#entry_file_name_text,0)
+            DisableGadget(#entry_data_file_name,0)
           EndIf
         Case #option_image_export_multiple
-          DisableGadget(#Check_export_character_name,0)
-          DisableGadget(#check_export_counter_name,0)     
+          DisableGadget(#Option_export_character_name,0)
+          DisableGadget(#Option_export_image_counter,0)     
         Case #option_image_export_single
-          DisableGadget(#Check_export_character_name,1)
-          DisableGadget(#check_export_counter_name,1) 
+          DisableGadget(#Option_export_character_name,1)
+          DisableGadget(#Option_export_image_counter,1) 
         Case #check_auto_size
           If GetGadgetState(#check_auto_size)
             DisableGadget(#entry_export_size_x_image,1)
@@ -207,12 +207,14 @@ Repeat
             DisableGadget(#Entry_export_size_y_image,0)
           EndIf
         Case #button_visualization
-          open_visualization()          
+          open_visualization() 
+        Case #button_export
+          export()
       EndSelect
   EndSelect  
 Until event = #PB_Event_CloseWindow
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 105
-; FirstLine = 71
+; CursorPosition = 42
+; FirstLine = 15
 ; Folding = -
 ; EnableXP

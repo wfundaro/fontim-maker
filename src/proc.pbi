@@ -236,7 +236,7 @@ EndProcedure
 ;-***** PREFERENCE *****
 Procedure load_preference()
   If OpenPreferences("prefs\Preferences.prefs")
-    language$ = ReadPreferenceString("Language","")
+    language$ = ReadPreferenceString(#PREFERENCE_LANGUAGE,"")
     ForEach language()
       If language()\file = language$
         ;SetMenuItemState(#menu,#menu_language + ListIndex(language()), 1)
@@ -245,7 +245,8 @@ Procedure load_preference()
         Break
       EndIf
     Next
-    SetGadgetState(#Combo_template,ReadPreferenceInteger("Template",0))
+    SetGadgetState(#Combo_template,ReadPreferenceInteger(#PREFERENCE_TEMPLATE,0))
+    project_path$ = ReadPreferenceString(#PREFERENCE_PROJECT_PATH,"")
     ClosePreferences()
   EndIf
   PostEvent(#PB_Event_Menu, #Window_0 , #menu_language + ListIndex(language()) )
@@ -254,8 +255,9 @@ EndProcedure
 
 Procedure save_preference()
   If OpenPreferences("prefs\Preferences.prefs")
-    WritePreferenceString("Language",language()\file)
-    WritePreferenceInteger("Template",GetGadgetState(#Combo_template))
+    WritePreferenceString(#PREFERENCE_LANGUAGE,language()\file)
+    WritePreferenceInteger(#PREFERENCE_TEMPLATE,GetGadgetState(#Combo_template))
+    WritePreferenceString(#PREFERENCE_PROJECT_PATH, project_path$)
     ClosePreferences()
   EndIf
 EndProcedure
@@ -343,8 +345,8 @@ Procedure change_language()
     SetGadgetText(#frame_mode_image_export,ReadPreferenceString("frame_mode_export","Export mode"))
     SetGadgetText(#option_image_export_single,ReadPreferenceString("opt_img_single","A unique image"))
     SetGadgetText(#option_image_export_multiple,ReadPreferenceString("opt_img_multi","One image per character"))
-    SetGadgetText(#check_export_character_name,ReadPreferenceString("check_char_name","Character in name (FileA,FileB...)"))
-    SetGadgetText(#check_export_counter_name,ReadPreferenceString("check_file_counter","Add counter (File1, File2,...)"))
+    SetGadgetText(#Option_export_character_name,ReadPreferenceString("check_char_name","Character in name (FileA,FileB...)"))
+    SetGadgetText(#Option_export_image_counter,ReadPreferenceString("check_file_counter","Add counter (File1, File2,...)"))
     SetGadgetText(#frame_image_file_name,ReadPreferenceString("frame_img_filename","Image file name"))
     ;SetGadgetText(#Entry_nom_fichier_image,ReadPreferenceString(
     SetGadgetText(#button_visualization,ReadPreferenceString("button_visualization","Visualization"))
@@ -364,8 +366,8 @@ Procedure change_language()
     SetGadgetText(#frame_data_name,ReadPreferenceString("frame_data_filename","Name of the Data file"))
     SetGadgetText(#check_file_name_text,ReadPreferenceString("check_name_as_image","Same name As image file(s)"))
     SetGadgetText(#label_image_name,ReadPreferenceString("label_info_file_img","%image -> Adds the name of the image"))
-    If GetGadgetText(#entry_file_name_text) = ""
-      SetGadgetText(#entry_file_name_text,"%image subimages.txt")
+    If GetGadgetText(#entry_data_file_name) = ""
+      SetGadgetText(#entry_data_file_name,"%image subimages.txt")
     EndIf   
     language_text("label_info_size_font") = ReadPreferenceString("label_info_size_font","Size font in view : ")
     SetGadgetText(#label_font_size_view,language_text("label_info_size_font") + Str(font_size_in_view * zoom\zoom))
@@ -385,6 +387,8 @@ Procedure change_language()
     GadgetToolTip(#check_round_end, ReadPreferenceString("check_round_end","Round End of outline"))
     GadgetToolTip(#check_diagonal_corner, ReadPreferenceString("check_diagonal_corner","Corner of diagonal outline"))
     GadgetToolTip(#check_rounded_corner, ReadPreferenceString("check_rounded_corner","Corner of rounded outline"))
+    PreferenceGroup("Requester")
+    language_text("select_export_directory") = ReadPreferenceString("select_export_directory", "Choose a directory")
     ClosePreferences()
   EndIf
   ;save_preference()
@@ -397,7 +401,7 @@ Procedure update_template()
     SetGadgetState(#option_text_file,\text_file)
     SetGadgetState(#option_json_file,1!\text_file)
     SetGadgetText(#entry_format_data,\text_format_export)
-    SetGadgetText(#entry_file_name_text,\text_export_name)
+    SetGadgetText(#entry_data_file_name,\text_export_name)
     SetGadgetState(#check_file_name_text,\check_image_name)
   EndWith
 EndProcedure
@@ -461,7 +465,7 @@ Procedure save_template()
   With list_template()
     \text_file = GetGadgetState(#option_text_file)
     \text_format_export = GetGadgetText(#entry_format_data)
-    \text_export_name = GetGadgetText(#entry_file_name_text)
+    \text_export_name = GetGadgetText(#entry_data_file_name)
     \check_image_name = GetGadgetState(#check_file_name_text)
     _save_file_template(\name)  
   EndWith
@@ -841,7 +845,7 @@ Procedure open_visualization()
 EndProcedure
 
 ;-***** DRAW CANVAS *****
-Procedure prepare_char(x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, List cursor._cursor(), nb_cursor_color, color1)
+Procedure prepare_char(x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.d, alpha.i, List cursor._cursor(), nb_cursor_color, color1)
   If nb_cursor_color = 1 ;one cursor no gradient
     VectorSourceColor( RGBA( Red(color1), Green(color1), Blue(color1), Alpha(color1) * (alpha / 255.0) ) )
   ElseIf nb_cursor_color > 1 ;gradient
@@ -852,7 +856,7 @@ Procedure prepare_char(x.d, y.d, character_width.d, character_height.d, linear_g
     Else
       cx.d = x + gradient_posx + mid_width
       cy.d = y + gradient_posy + mid_height
-      segment = Sqr((character_width * character_width) + (character_height * character_height))
+      segment.d = Sqr((character_width * character_width) + (character_height * character_height))
       segment = (segment/2 + (segment * scale))
       x1.d = cx + segment * Cos(angle + #PI)
       y1.d = cy + segment * Sin(angle + #PI)
@@ -872,11 +876,11 @@ Procedure prepare_char(x.d, y.d, character_width.d, character_height.d, linear_g
   MovePathCursor(x, y)
 EndProcedure
 
-Procedure draw_character(char$, x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.f, alpha.i, nb_cursor_color, color1)
-  prepare_char(x, y, character_width.d, character_height.d,
-               linear_gradient.b, gradient_posx.d, gradient_posy.d, 
-               radius.i, angle.f, scale.f, 
-               alpha.i, global_character\color\cursor(), nb_cursor_color, color1)
+Procedure draw_character(char$, x.d, y.d, character_width.d, character_height.d, linear_gradient.b, gradient_posx.d, gradient_posy.d, radius.i, angle.f, scale.d, alpha.i, nb_cursor_color, color1)
+  prepare_char(x, y, character_width, character_height,
+               linear_gradient, gradient_posx, gradient_posy, 
+               radius, angle, scale, 
+               alpha, global_character\color\cursor(), nb_cursor_color, color1)
   DrawVectorText(char$)   
 EndProcedure
 
@@ -937,17 +941,18 @@ Procedure draw_canvas(mode=2)
         StrokePath(2)
       EndIf
       character_width = VectorTextWidth(char$, #PB_VectorText_Visible)
-      character_height = VectorTextHeight(char$)
+      character_height = VectorTextHeight(char$, #PB_VectorText_Visible)
       decal_x = (#CELL_WIDTH - character_width) / 2 + global_character\offset_x ;character position in cell
-      decal_y = (#CELL_HEIGHT - character_height) / 2 + global_character\offset_y
+      decal_y = (#CELL_HEIGHT - character_height) / 2 + global_character\offset_y - VectorTextHeight(char$, #PB_VectorText_Visible | #PB_VectorText_Offset)
       If global_character\outline\over <> #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline under character
         draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
-                     character_width, character_height, 
+                     character_width + global_character\outline\width, character_height + global_character\outline\width, 
                      global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                      global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
                      global_character\outline\width, global_character\outline\path_option,
                      global_character\outline\alpha, nb_curseur_outline, color_outline1)
-      EndIf      
+      EndIf    
+        
       draw_character(char$, x * #CELL_WIDTH + decal_x, y * #CELL_HEIGHT + decal_y,
                      character_width, character_height,
                      global_character\color\linear, gradient_posx, gradient_posy,
@@ -960,7 +965,7 @@ Procedure draw_canvas(mode=2)
       
       If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked; outline over character 
         draw_outline(char$, x * #CELL_WIDTH + decal_x + global_character\outline\offset_x, y * #CELL_HEIGHT + decal_y + global_character\outline\offset_y, 
-                     character_width, character_height, 
+                     character_width + global_character\outline\width, character_height + global_character\outline\width, 
                      global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                      global_character\outline\scale, global_character\outline\radius, global_character\outline\angle,
                      global_character\outline\width, global_character\outline\path_option,
@@ -980,7 +985,7 @@ Procedure draw_canvas(mode=2)
   StopVectorDrawing() 
 EndProcedure
 
-Procedure draw_outline(char$, x.d, y.d, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, scale.f, radius.i, angle_degrade_outline.f, size_outline.d, path_option.i, alpha.i, nb_curseur_outline, color_outline1)
+Procedure draw_outline(char$, x.d, y.d, character_width.i, character_height.i, linear_gradient.b, gradient_posx.d, gradient_posy.d, scale.d, radius.i, angle_degrade_outline.f, size_outline.d, path_option.i, alpha.i, nb_curseur_outline, color_outline1)
   prepare_char(x, y, character_width, character_height,
                linear_gradient, gradient_posx, gradient_posy, 
                radius, angle_degrade_outline, scale, 
@@ -1005,9 +1010,9 @@ Procedure character_distribution_calculation(Array copy_char._character(1), *nb_
         height_line = height_line + max_height_line
         max_height_line = 0
       EndIf
-      width_line = width_line + copy_char(i)\width_in_image + 1
-      If max_height_line < copy_char(i)\height_in_image
-        max_height_line = copy_char(i)\height_in_image
+      width_line = width_line + copy_char(i)\character_width + 1
+      If max_height_line < copy_char(i)\character_height
+        max_height_line = copy_char(i)\character_height
       EndIf      
       If max_width_line < width_line
         max_width_line = width_line
@@ -1029,33 +1034,38 @@ Procedure character_distribution_calculation(Array copy_char._character(1), *nb_
   ProcedureReturn max_width_line
 EndProcedure
 
-Procedure prepare_position_element(Array copy_char._character(1))
+Procedure prepare_position_element(Array copy_char._character(1), size_outline.d, ratio_font.d)
   nb_character = 0
-    For i=0 To ArraySize(copy_char() ) - 1   ;on compte le nombre de caractère sélectionné
-      If copy_char(i)\selected = 1
-        nb_character + 1
-        copy_char(i)\offset_x_outline_in_image = (global_character\outline\offset_x * ratio_font)
-        copy_char(i)\offset_y_outline_in_image = (global_character\outline\offset_y * ratio_font)
-        ;calc offset X for drawing character
-        copy_char(i)\offset_x_in_image = size_outline - copy_char(i)\offset_x_outline_in_image
-        ;if offset < 0 , character start at 0
-        If copy_char(i)\offset_x_in_image < 0
-          copy_char(i)\offset_x_in_image = 0 
-        EndIf
-        copy_char(i)\offset_x_in_image - VectorTextWidth(Chr(i), #PB_VectorText_Visible|#PB_VectorText_Offset)
-        copy_char(i)\width_in_image = size_outline*1.8 + Abs(copy_char(i)\offset_x_outline_in_image) + VectorTextWidth(Chr(i), #PB_VectorText_Visible)
-        copy_char(i)\left_offset = copy_char(i)\offset_x_in_image
-        
-        copy_char(i)\offset_y_in_image = size_outline - copy_char(i)\offset_y_outline_in_image
-        If copy_char(i)\offset_y_in_image < 0
-          copy_char(i)\offset_y_in_image = 0
-        EndIf
-        copy_char(i)\top_offset = VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset) - copy_char(i)\offset_y_in_image
-        copy_char(i)\offset_y_in_image - VectorTextHeight(Chr(i), #PB_VectorText_Visible | #PB_VectorText_Offset)
-        copy_char(i)\height_in_image = size_outline*1.8 + Abs(copy_char(i)\offset_y_outline_in_image) + VectorTextHeight(Chr(i), #PB_VectorText_Visible)
+  For i=0 To ArraySize(copy_char() ) - 1   ;on compte le nombre de caractère sélectionné
+    If copy_char(i)\selected = 1
+      nb_character + 1
+      char$ = Chr(copy_char(i)\value)
+      copy_char(i)\offset_x_outline_in_image = (global_character\outline\offset_x * ratio_font)
+      copy_char(i)\offset_y_outline_in_image = (global_character\outline\offset_y * ratio_font)
+      ;calc offset X for drawing character
+      copy_char(i)\offset_x_in_image = size_outline - copy_char(i)\offset_x_outline_in_image
+      ;if offset < 0 , character start at 0
+      If copy_char(i)\offset_x_in_image < 0
+        copy_char(i)\offset_x_in_image = 0 
       EndIf
-    Next
-    ProcedureReturn nb_character
+      copy_char(i)\offset_x_in_image - VectorTextWidth(char$, #PB_VectorText_Visible|#PB_VectorText_Offset)
+      copy_char(i)\character_width = VectorTextWidth(char$, #PB_VectorText_Visible)
+      copy_char(i)\outline_width = size_outline + VectorTextWidth(char$, #PB_VectorText_Visible)
+      copy_char(i)\width_in_image = copy_char(i)\outline_width + Abs(copy_char(i)\offset_x_outline_in_image) + size_outline
+      copy_char(i)\left_offset = copy_char(i)\offset_x_in_image
+      
+      copy_char(i)\offset_y_in_image = size_outline - copy_char(i)\offset_y_outline_in_image
+      If copy_char(i)\offset_y_in_image < 0
+        copy_char(i)\offset_y_in_image = 0
+      EndIf
+      copy_char(i)\top_offset = VectorTextHeight(char$, #PB_VectorText_Visible | #PB_VectorText_Offset) - copy_char(i)\offset_y_in_image
+      copy_char(i)\offset_y_in_image - VectorTextHeight(char$, #PB_VectorText_Visible | #PB_VectorText_Offset)
+      copy_char(i)\character_height = VectorTextHeight(char$, #PB_VectorText_Visible)
+      copy_char(i)\outline_height = size_outline + VectorTextHeight(char$, #PB_VectorText_Visible)
+      copy_char(i)\height_in_image = copy_char(i)\outline_height + Abs(copy_char(i)\offset_y_outline_in_image) + size_outline
+    EndIf
+  Next
+  ProcedureReturn nb_character
 EndProcedure
 
 Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZATION) ; visualization, auto resize, export
@@ -1063,40 +1073,40 @@ Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZA
   Protected id_font.i, work_image.i
   Protected size_outline.d = 0.0, ratio_font.d, nb_character_per_line.i = 0
   id_font = LoadFont(#PB_Any,GetGadgetText(#Combo_font), global_character\size, global_character\style)
+  ratio_font = global_character\size / font_size_in_view
   If IsFont(id_font)
     ClearList(export_data())
-    work_image = CreateImage(#PB_Any, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE, 32)
+    work_image = CreateImage(#PB_Any, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE, 32, #PB_Image_Transparent )
     nb_cursor_color = ListSize(global_character\color\cursor()) ;gradient::get_number_cursor(#gradient_color)
     nb_curseur_outline = ListSize(global_character\outline\cursor()) ;gradient::get_number_cursor(#gradient_outline)
     If ListSize(global_character\color\cursor())>0
       FirstElement(global_character\color\cursor())
       color1 = global_character\color\cursor()\color
       If global_character\color\linear = #PB_Checkbox_Unchecked
-        gradient_posx = global_character\color\circular_gradient_posx
-        gradient_posy = global_character\color\circular_gradient_posy
+        gradient_posx = global_character\color\circular_gradient_posx * ratio_font
+        gradient_posy = global_character\color\circular_gradient_posy * ratio_font
       Else
-        gradient_posx = global_character\color\linear_gradient_posx
-        gradient_posy = global_character\color\linear_gradient_posy      
+        gradient_posx = global_character\color\linear_gradient_posx * ratio_font
+        gradient_posy = global_character\color\linear_gradient_posy * ratio_font
       EndIf
     EndIf
     If ListSize(global_character\outline\cursor())>0
       FirstElement(global_character\outline\cursor())
       color_outline1 = global_character\outline\cursor()\color
       If global_character\color\linear = #PB_Checkbox_Unchecked
-        outline_gradient_posx = global_character\outline\circular_gradient_posx
-        outline_gradient_posy = global_character\outline\circular_gradient_posy
+        outline_gradient_posx = global_character\outline\circular_gradient_posx * ratio_font
+        outline_gradient_posy = global_character\outline\circular_gradient_posy * ratio_font
       Else
-        outline_gradient_posx = global_character\outline\linear_gradient_posx
-        outline_gradient_posy = global_character\outline\linear_gradient_posy      
+        outline_gradient_posx = global_character\outline\linear_gradient_posx * ratio_font
+        outline_gradient_posy = global_character\outline\linear_gradient_posy * ratio_font      
       EndIf
     EndIf
-    ratio_font = global_character\size / font_size_in_view
     If GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked
       size_outline = global_character\outline\width * ratio_font
     EndIf
     StartVectorDrawing(ImageVectorOutput(work_image))    
     VectorFont(FontID(id_font))
-    nb_character = prepare_position_element(copy_char())
+    nb_character = prepare_position_element(copy_char(), size_outline, ratio_font)
     If GetGadgetState(#check_auto_size) = #PB_Checkbox_Checked
       nb_character_per_line = Round(nb_character / Round(Sqr(nb_character), #PB_Round_Nearest), #PB_Round_Up)
       For u=0 To 5
@@ -1107,8 +1117,8 @@ Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZA
       limit_line = Val(GetGadgetText(#entry_export_size_x_image))
     EndIf
     
-    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\width_in_image), TypeOf(_character\width_in_image))
-    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\height_in_image), TypeOf(_character\height_in_image))
+    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\character_width), TypeOf(_character\character_width))
+    ;         SortStructuredArray(copy_char(), #PB_Sort_Ascending , OffsetOf(_character\character_height), TypeOf(_character\character_height))
     
     If GetGadgetState(#check_image_with_background) = #PB_Checkbox_Checked
       AddPathBox(0, 0, #SIZE_WORK_IMAGE, #SIZE_WORK_IMAGE)
@@ -1150,8 +1160,8 @@ Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZA
         char_y = point_y + copy_char(i)\offset_y_in_image
         If global_character\outline\over = #PB_Checkbox_Unchecked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline under   
           draw_outline(char$, char_x + copy_char(i)\offset_x_outline_in_image, char_y + copy_char(i)\offset_y_outline_in_image, 
-                       copy_char(i)\width_in_image, copy_char(i)\height_in_image, 
-                       global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+                       copy_char(i)\outline_width, copy_char(i)\outline_height, 
+                       global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
                        size_outline, global_character\outline\path_option,
                        global_character\outline\alpha, nb_curseur_outline, color_outline1)          
@@ -1163,19 +1173,19 @@ Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZA
           DashPath(3, 6)
         EndIf        
         
-        draw_character(char$, char_x, char_y, copy_char(i)\width_in_image, copy_char(i)\height_in_image,
-                       global_character\color\linear, gradient_posx * ratio_font, gradient_posy * ratio_font,
+        draw_character(char$, char_x, char_y, copy_char(i)\character_width, copy_char(i)\character_height,
+                       global_character\color\linear, gradient_posx, gradient_posy,
                        global_character\color\radius * ratio_font,
                        global_character\color\angle, 
                        global_character\color\scale, 
                        global_character\color\alpha, 
                        nb_cursor_color, 
                        color1) 
-                
+        
         If global_character\outline\over = #PB_Checkbox_Checked And GetGadgetState(#Check_outline_active) = #PB_Checkbox_Checked ; outline over 
           draw_outline(char$, char_x + copy_char(i)\offset_x_outline_in_image, char_y + copy_char(i)\offset_y_outline_in_image, 
-                       copy_char(i)\width_in_image, copy_char(i)\height_in_image, 
-                       global_character\outline\linear, outline_gradient_posx * ratio_font, outline_gradient_posy * ratio_font,
+                       copy_char(i)\outline_width, copy_char(i)\outline_height, 
+                       global_character\outline\linear, outline_gradient_posx, outline_gradient_posy,
                        global_character\outline\scale, global_character\outline\radius * ratio_font, global_character\outline\angle,
                        size_outline, global_character\outline\path_option,
                        global_character\outline\alpha, nb_curseur_outline, color_outline1)
@@ -1183,7 +1193,7 @@ Procedure.l image_creation(Array copy_char._character(1), mode = #MODE_VISUALIZA
         
         If mode = #MODE_EXPORT
           AddElement(export_data())
-          export_data()\character = i
+          export_data()\character = copy_char(i)\value
           ;position in image
           export_data()\posx = point_x
           export_data()\posy = point_y
@@ -1223,9 +1233,99 @@ EndProcedure
 
 ;-***** EXPORT IMAGE AND DATA *****
 Procedure export()
+  ;create the array containing the selected characters
+  Dim copy_char._character(256)
+  copy_selected_character_to_array(copy_char())
   
+  ;Collect path information
+  export_path$ = PathRequester(language_text("select_export_directory"), export_path$)  
+  image_filename$ = GetFilePart(GetGadgetText(#entry_image_file_name), #PB_FileSystem_NoExtension)
+  Select GetGadgetText(#combo_image_output_format)
+    Case "jpeg"
+      image_format = #PB_ImagePlugin_JPEG
+      image_extension$ = "jpg"
+    Case "bmp"
+      image_format = #PB_ImagePlugin_BMP      
+      image_extension$ = "bmp"
+    Default
+      image_format = #PB_ImagePlugin_PNG      
+      image_extension$ = "png"
+  EndSelect
+  
+  ;data format
+  data_pattern$ = GetGadgetText(#entry_format_data)
+  data_filename$ = GetGadgetText(#entry_data_file_name)
+  
+  ;if export one image per character
+  If GetGadgetState(#option_image_export_multiple)
+    Dim one_char._character(1)
+    increment = 0
+    complete_data$ = "pattern = " + data_pattern$ + #CR$   
+    For i=0 To ArraySize( copy_char() ) - 1
+      one_char(0)\value = copy_char(i)\value
+      one_char(0)\selected = copy_char(i)\selected
+      complete_data$ = complete_data$ + _export_image_data(one_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment)
+      increment + 1
+    Next
+    ;save another file with all containing data of all images
+    all_data_file = CreateFile(#PB_Any, export_path$ + "all_" + ReplaceString(data_filename$, "%image", image_filename$), #PB_UTF8 )
+    If all_data_file
+      WriteString(all_data_file, complete_data$, #PB_UTF8)
+      CloseFile(all_data_file)
+    EndIf
+    FreeArray(one_char())
+  Else  ;export a single image with all characters inside
+    _export_image_data(copy_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$)
+  EndIf
+  FreeArray(copy_char())
 EndProcedure
 
+Procedure.s _export_image_data(Array copy_char._character(1), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment = 0) 
+  one_image_data$ = ""
+  add_char_asc$ = ""
+  add_increment$ = ""
+  image = image_creation(copy_char(), #MODE_EXPORT)
+  If IsImage(image)
+    If GetGadgetState(#option_image_export_multiple)
+      If GetGadgetState(#Option_export_character_name)
+        add_char_asc$ = Chr(copy_char(0)\value)
+      EndIf
+      If GetGadgetState(#Option_export_image_counter)
+        add_increment$ = Str(increment)
+      EndIf
+      If add_char_asc$ = "" And add_increment$ = ""
+        add_increment$ = Str(increment)
+      EndIf
+    EndIf
+    SaveImage(image, export_path$ + image_filename$ + add_char_asc$ + add_increment$ + "." + image_extension$, image_format ) 
+    data_file = CreateFile(#PB_Any, export_path$ + ReplaceString(data_filename$, "%image", image_filename$), #PB_UTF8)
+    If data_file
+      ;write image filename reference
+      WriteStringN(data_file, image_filename$ + add_char_asc$ + add_increment$ + "." + image_extension$, #PB_UTF8)
+      WriteStringN(data_file, "pattern = " + data_pattern$, #PB_UTF8)
+      ForEach export_data()
+        copy_data_pattern$ = data_pattern$
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%asc", Str(export_data()\character) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%chr", Chr(export_data()\character) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%x", Str(export_data()\posx) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%y", Str(export_data()\posy) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%sizex", Str(export_data()\sx) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%sizey", Str(export_data()\sy) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%ox", Str(export_data()\offset_x) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%oy", Str(export_data()\offset_y) )
+        copy_data_pattern$ = ReplaceString(copy_data_pattern$, "%i", Str(increment) )
+        WriteStringN(data_file, copy_data_pattern$, #PB_UTF8)
+        If GetGadgetState(#option_image_export_single)
+          increment + 1
+        EndIf
+      Next
+      CloseFile(data_file)
+    EndIf
+    one_image_data$ = image_filename$ + add_char_asc$ + add_increment$ + "." + image_extension$ + ":" + copy_data_pattern$ + #CR$
+    FreeImage(image)
+    ProcedureReturn one_image_data$
+  EndIf
+EndProcedure
 
 ;-***** SYSTEM FONT ENUMERATION *****
 ;{ system font enumeration procedure
@@ -1244,7 +1344,7 @@ Procedure SysInfo_Fonts()
 EndProcedure ;}
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 1031
-; FirstLine = 1031
+; CursorPosition = 953
+; FirstLine = 1252
 ; Folding = --------
 ; EnableXP

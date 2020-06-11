@@ -59,7 +59,7 @@ button_save_template = Sauver
 button_add_template = Nouveau
 button_delete_template = Effacer
 frame_output_data = Format d'export
-info_format_data_001 = EX :  name_%i,%x,%y,%sizex,%sizey
+info_format_data_001 = %ox, %oy -> offsetX, offsetY
 info_format_data_002 = %i  -> pour ajouter un incrément
 info_format_data_003 = %asc -> ajoute la valeur du caractère ascii
 info_format_data_004 = %chr -> caractère
@@ -92,3 +92,6 @@ check_square_end = Extrémité des contour carrée
 check_round_end = Extrémité des contours ronde
 check_diagonal_corner = Coin des contours en biseau
 check_rounded_corner = Coin des contours arrondi
+
+[Requester]
+select_export_directory = Choisissez un répertoire
