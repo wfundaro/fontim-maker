@@ -7,20 +7,20 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2020-06-10 20:54" user="Developper" host="DESKTOP-M1J9HL8"/>
+    <lastopen date="2020-08-08 00:26" user="Developper" host="DESKTOP-M1J9HL8"/>
   </section>
   <section name="files">
     <file name="main.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="e119773add10d99c42643457b447cefb"/>
+      <fingerprint md5="25fa1089ef87eb32b6841845ec91f413"/>
     </file>
     <file name="src\declaration.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="24d8727a8d3ef2a69deb6e1daa18a2a4"/>
+      <fingerprint md5="777d802ec4c6b0018a901638917ebf31"/>
     </file>
     <file name="src\interface_fm.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="4a6285c85bb6c90ff9316d7757b22e45"/>
+      <fingerprint md5="3497f3ae3ae744b1e0c82b9ab4d6b121"/>
     </file>
     <file name="src\module_gadget_gradient.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
@@ -28,13 +28,14 @@
     </file>
     <file name="src\proc.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
-      <fingerprint md5="86ae2075fe821930e7d29e74bf56dbc7"/>
+      <fingerprint md5="961cf91a47dd244572e46913b86ce87f"/>
     </file>
   </section>
   <section name="targets">
     <target name="Cible par défaut" enabled="1" default="1">
       <inputfile value="main.pb"/>
       <outputfile value="FontimMaker_1.0.exe"/>
+      <executable value="FontimMaker_1.0.exe"/>
       <options xpskin="1" debug="1"/>
       <versioninfo enable="1">
         <field0 value="1.0.0.0"/>

@@ -94,4 +94,6 @@ check_diagonal_corner = Corner of diagonal outline
 check_rounded_corner = Corner of rounded outline
 
 [Requester]
-select_export_directory = Choose a directory
+choose_export_directory = Choose a directory
+save_project_filename = Select a file to save
+load_project_filename = Select a file to open

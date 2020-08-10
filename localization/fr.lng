@@ -94,4 +94,6 @@ check_diagonal_corner = Coin des contours en biseau
 check_rounded_corner = Coin des contours arrondi
 
 [Requester]
-select_export_directory = Choisissez un répertoire
+choose_export_directory = Choisissez un répertoire
+save_project_filename = Sélectionnez un fichier à sauvegarder
+load_project_filename = Sélectionnez un fichier à ouvrir

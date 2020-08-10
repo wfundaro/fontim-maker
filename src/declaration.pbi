@@ -27,9 +27,10 @@ Enumeration #PB_Event_FirstCustomValue
 EndEnumeration
 
 ;-PREFERENCE CONSTANT
-#PREFERENCE_LANGUAGE = "Language"
-#PREFERENCE_TEMPLATE = "Template"
-#PREFERENCE_PROJECT_PATH = "Project_path"
+#PREFERENCE_LANGUAGE      = "Language"
+#PREFERENCE_TEMPLATE      = "Template"
+#PREFERENCE_PROJECT_PATH  = "Project_path"
+#PREFERENCE_EXPORT_PATH   = "Export_path"
 ;-STRUCTURE
 Structure _template_data
   name.s
@@ -156,7 +157,7 @@ Global extension_file._extension_file
 Global NewList export_data._char_export()
 Global export_path$ = "" ;path of export image and data
 Global project_path$ = "" ; path of load/save project
-
+Global current_project_filename$ = ""
 zoom\posx = 0
 zoom\posy = 0
 zoom\zoom = 1.0
@@ -197,7 +198,7 @@ Declare calcul_size_font_view(mode=2)
 Declare.l image_creation(Array copy_char._character(1), mode = 0)
 Declare.s _export_image_data(Array copy_char._character(1), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment = 0)
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 116
-; FirstLine = 80
+; CursorPosition = 159
+; FirstLine = 129
 ; Folding = -
 ; EnableXP

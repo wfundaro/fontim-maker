@@ -27,8 +27,8 @@ Procedure init_canvas()
     \color\circular_gradient_posx = GetGadgetState(#spin_posx_color_circular_gradient)
     \color\circular_gradient_posy = GetGadgetState(#spin_posy_color_circular_gradient)
     \color\linear = GetGadgetState(#option_gradient_linear)
-    \color\linear_gradient_posx = GetGadgetState(#Spin_posx_color_linear_gradient)
-    \color\linear_gradient_posy = GetGadgetState(#Spin_posy_color_linear_gradient)
+    \color\linear_gradient_posx = GetGadgetState(#spin_posx_color_linear_gradient)
+    \color\linear_gradient_posy = GetGadgetState(#spin_posy_color_linear_gradient)
     \color\radius = GetGadgetState(#spin_radius_circular_gradient)
     \color\scale = GetGadgetState(#spin_scale_linear_gradient) / #COEFF_2
     AddElement(\color\cursor())
@@ -137,8 +137,8 @@ Procedure update_option_gradient_color()
     HideGadget(#label_radius_circular_gradient,1)
     HideGadget(#spin_scale_linear_gradient,0)
     HideGadget(#label_scale_linear_gradient,0)
-    HideGadget(#Spin_posx_color_linear_gradient,0)
-    HideGadget(#Spin_posy_color_linear_gradient,0)
+    HideGadget(#spin_posx_color_linear_gradient,0)
+    HideGadget(#spin_posy_color_linear_gradient,0)
     If gradient::get_number_cursor(#gradient_color) > 1
       DisableGadget(#track_angle_color,0)
       DisableGadget(#entry_angle_color,0)
@@ -151,8 +151,8 @@ Procedure update_option_gradient_color()
     HideGadget(#label_radius_circular_gradient,0)
     HideGadget(#spin_scale_linear_gradient,1)
     HideGadget(#label_scale_linear_gradient,1)
-    HideGadget(#Spin_posx_color_linear_gradient,1)
-    HideGadget(#Spin_posy_color_linear_gradient,1)
+    HideGadget(#spin_posx_color_linear_gradient,1)
+    HideGadget(#spin_posy_color_linear_gradient,1)
     DisableGadget(#track_angle_color,1)
     DisableGadget(#entry_angle_color,1)
     DisableGadget(#label_angle_color,1)
@@ -258,6 +258,7 @@ Procedure save_preference()
     WritePreferenceString(#PREFERENCE_LANGUAGE,language()\file)
     WritePreferenceInteger(#PREFERENCE_TEMPLATE,GetGadgetState(#Combo_template))
     WritePreferenceString(#PREFERENCE_PROJECT_PATH, project_path$)
+    WritePreferenceString(#PREFERENCE_EXPORT_PATH, export_path$)
     ClosePreferences()
   EndIf
 EndProcedure
@@ -388,7 +389,9 @@ Procedure change_language()
     GadgetToolTip(#check_diagonal_corner, ReadPreferenceString("check_diagonal_corner","Corner of diagonal outline"))
     GadgetToolTip(#check_rounded_corner, ReadPreferenceString("check_rounded_corner","Corner of rounded outline"))
     PreferenceGroup("Requester")
-    language_text("select_export_directory") = ReadPreferenceString("select_export_directory", "Choose a directory")
+    language_text("choose_export_directory") = ReadPreferenceString("choose_export_directory", "Choose a directory")
+    language_text("save_project_filename") = ReadPreferenceString("save_project_filename", "Select a file to save")
+    language_text("load_project_filename") = ReadPreferenceString("load_project_filename", "Select a file to open")
     ClosePreferences()
   EndIf
   ;save_preference()
@@ -396,41 +399,41 @@ EndProcedure
 
 ;- ***** TEMPLATE *****
 Procedure update_template()
-  SelectElement(list_template(),GetGadgetState(#Combo_template))
+  SelectElement(list_template(), GetGadgetState(#Combo_template))
   With list_template()
-    SetGadgetState(#option_text_file,\text_file)
-    SetGadgetState(#option_json_file,1!\text_file)
-    SetGadgetText(#entry_format_data,\text_format_export)
-    SetGadgetText(#entry_data_file_name,\text_export_name)
-    SetGadgetState(#check_file_name_text,\check_image_name)
+    SetGadgetState(#option_text_file, \text_file)
+    SetGadgetState(#option_json_file, 1!\text_file)
+    SetGadgetText(#entry_format_data, \text_format_export)
+    SetGadgetText(#entry_data_file_name, \text_export_name)
+    SetGadgetState(#check_file_name_text, \check_image_name)
   EndWith
 EndProcedure
 
-Procedure load_template(nom.s="")
+Procedure load_template(nom.s = "")
   Protected file.i, head$, check.b
-  file = ReadFile(#PB_Any,"template\template.tfm")
+  file = ReadFile(#PB_Any, "template\template.tfm")
   If file
     ClearGadgetItems(#Combo_template)
     ClearList(list_template())
-    While Eof(file)=0
+    While Eof(file) = 0
       head$ = ReadString(file)
-      If head$<>""
+      If head$ <> ""
         AddElement(list_template())
         With list_template()
-          \name = StringField(head$,1,"|")
-          \text_file = Val(StringField(head$,2,"|"))
-          \text_format_export = StringField(head$,3,"|")
-          \text_export_name = StringField(head$,4,"|")
-          \check_image_name = Val(StringField(head$,5,"|"))
-          AddGadgetItem(#Combo_template,-1,\name)
+          \name = StringField(head$, 1, "|")
+          \text_file = Val(StringField(head$, 2, "|"))
+          \text_format_export = StringField(head$, 3, "|")
+          \text_export_name = StringField(head$, 4, "|")
+          \check_image_name = Val(StringField(head$, 5, "|"))
+          AddGadgetItem(#Combo_template, -1, \name)
         EndWith
       EndIf
     Wend
     CloseFile(file)
-    If nom<>""
-      For i=0 To CountGadgetItems(#Combo_template)-1
-        If GetGadgetItemText(#Combo_template,i) = nom
-          SetGadgetState(#Combo_template,i)
+    If nom <> ""
+      For i = 0 To CountGadgetItems(#Combo_template) - 1
+        If GetGadgetItemText(#Combo_template, i) = nom
+          SetGadgetState(#Combo_template, i)
           ProcedureReturn 1
         EndIf
       Next
@@ -443,16 +446,16 @@ EndProcedure
 
 Procedure _save_file_template(entry$="")
   Protected file.i
-  SortStructuredList(list_template(), #PB_Sort_Ascending, OffsetOf(_template_data\name),TypeOf(_template_data\name))
+  SortStructuredList(list_template(), #PB_Sort_Ascending, OffsetOf(_template_data\name), TypeOf(_template_data\name))
   ;on passe à la sauvegarde des templates
   file = CreateFile(#PB_Any,"template\template.tfm")
   If file
     ForEach list_template()
       With list_template()
-        WriteStringN(file, RemoveString(\name,"|") + "|" +
+        WriteStringN(file, RemoveString(\name, "|") + "|" +
                            Str(\text_file) + "|" +
-                           RemoveString(\text_format_export,"|") + "|" +
-                           RemoveString(\text_export_name,"|") + "|" + 
+                           RemoveString(\text_format_export, "|") + "|" +
+                           RemoveString(\text_export_name, "|") + "|" + 
                            Str(\check_image_name))
       EndWith
     Next
@@ -475,10 +478,10 @@ Procedure add_template()
   Protected titre$, text$
   OpenPreferences("localization\" + language()\file)
   PreferenceGroup("Template")
-  titre$ = ReadPreferenceString("input_template_title","Add template")
-  text$ = ReadPreferenceString("input_template_text","Enter template name :")
+  titre$ = ReadPreferenceString("input_template_title", "Add template")
+  text$ = ReadPreferenceString("input_template_text", "Enter template name :")
   ClosePreferences()
-  entry$ = InputRequester(titre$,text$,"")
+  entry$ = InputRequester(titre$, text$, "")
   If entry$=""
     ProcedureReturn 0
   EndIf
@@ -492,7 +495,7 @@ EndProcedure
 
 Procedure delete_template()
   Protected index.i = GetGadgetState(#Combo_template)
-  SelectElement(list_template(),index)
+  SelectElement(list_template(), index)
   DeleteElement(list_template())
   _save_file_template()
 EndProcedure
@@ -513,21 +516,21 @@ Procedure calcul_size_font_view(mode=2)
       StartVectorDrawing(CanvasVectorOutput(#canvas_character_view))
       VectorFont(FontID(0))
       ;DrawingMode(#PB_2DDrawing_Transparent)
-      For i=0 To 255
-        If VectorTextWidth(Chr(i))>cal_lg
-          cal_lg = VectorTextWidth(Chr(i),#PB_VectorText_Visible)
+      For i = 0 To 255
+        If VectorTextWidth(Chr(i)) > cal_lg
+          cal_lg = VectorTextWidth(Chr(i), #PB_VectorText_Visible)
         EndIf
-        If VectorTextHeight(Chr(i))>cal_ht
-          cal_ht = VectorTextHeight(Chr(i),#PB_VectorText_Visible)
+        If VectorTextHeight(Chr(i)) > cal_ht
+          cal_ht = VectorTextHeight(Chr(i), #PB_VectorText_Visible)
         EndIf
       Next      
       StopVectorDrawing()
       cal_lg = cal_lg/28
       cal_ht = cal_ht/38
-      If cal_lg>cal_ht : font_size_in_view = (font_size_in_view/cal_lg) : EndIf
-      If cal_lg<cal_ht : font_size_in_view = (font_size_in_view/cal_ht) : EndIf
+      If cal_lg > cal_ht : font_size_in_view = (font_size_in_view / cal_lg) : EndIf
+      If cal_lg < cal_ht : font_size_in_view = (font_size_in_view / cal_ht) : EndIf
     Case 1 ;on augmente la size de la police de 1
-      font_size_in_view +1
+      font_size_in_view + 1
   EndSelect
   ;}
   LoadFont(#font_global_canvas, font_system(), font_size_in_view, global_character\style)
@@ -557,10 +560,10 @@ EndProcedure
 Procedure event_gadget(gadget.i)
   Protected color.i
   Select gadget
-    Case #Spin_posx_color_linear_gradient
-      global_character\color\linear_gradient_posx = GetGadgetState(#Spin_posx_color_linear_gradient) / #COEFF_1
-    Case #Spin_posy_color_linear_gradient
-      global_character\color\linear_gradient_posy = GetGadgetState(#Spin_posy_color_linear_gradient) / #COEFF_1
+    Case #spin_posx_color_linear_gradient
+      global_character\color\linear_gradient_posx = GetGadgetState(#spin_posx_color_linear_gradient) / #COEFF_1
+    Case #spin_posy_color_linear_gradient
+      global_character\color\linear_gradient_posy = GetGadgetState(#spin_posy_color_linear_gradient) / #COEFF_1
     Case #spin_scale_linear_gradient
       global_character\color\scale = GetGadgetState(#spin_scale_linear_gradient) / #COEFF_2
     Case #spin_posx_color_circular_gradient
@@ -682,8 +685,8 @@ Procedure event_gadget(gadget.i)
       If nb_curseur = 1
         DisableGadget(#spin_scale_linear_gradient,1)
         DisableGadget(#spin_radius_circular_gradient,1)
-        DisableGadget(#Spin_posx_color_linear_gradient,1)
-        DisableGadget(#Spin_posy_color_linear_gradient,1)
+        DisableGadget(#spin_posx_color_linear_gradient,1)
+        DisableGadget(#spin_posy_color_linear_gradient,1)
         DisableGadget(#spin_posx_color_circular_gradient,1)
         DisableGadget(#spin_posy_color_circular_gradient,1)
         DisableGadget(#label_angle_color,1)
@@ -692,15 +695,13 @@ Procedure event_gadget(gadget.i)
       Else
         DisableGadget(#spin_scale_linear_gradient,0)
         DisableGadget(#spin_radius_circular_gradient,0)
-        DisableGadget(#Spin_posx_color_linear_gradient,0)
-        DisableGadget(#Spin_posy_color_linear_gradient,0)
+        DisableGadget(#spin_posx_color_linear_gradient,0)
+        DisableGadget(#spin_posy_color_linear_gradient,0)
         DisableGadget(#spin_posx_color_circular_gradient,0)
         DisableGadget(#spin_posy_color_circular_gradient,0)
-        If Not GetGadgetState(#option_gradient_circular)
-          DisableGadget(#label_angle_color,0)
-          DisableGadget(#entry_angle_color,0)
-          DisableGadget(#track_angle_color,0)
-        EndIf
+        DisableGadget(#label_angle_color,0)
+        DisableGadget(#entry_angle_color,0)
+        DisableGadget(#track_angle_color,0)
       EndIf
     Case #gradient_outline
       nb_curseur = gradient::get_number_cursor(#gradient_outline)
@@ -726,11 +727,9 @@ Procedure event_gadget(gadget.i)
         DisableGadget(#spin_radius_gradient_outline,0)
         DisableGadget(#Spin_posx_circular_gradient_outline,0)
         DisableGadget(#Spin_posy_circular_gradient_outline,0)    
-        If Not GetGadgetState(#option_circular_gradient_outline)
-          DisableGadget(#label_angle_outline,0)
-          DisableGadget(#entry_angle_outline,0)
-          DisableGadget(#track_angle_outline,0)
-        EndIf
+        DisableGadget(#label_angle_outline,0)
+        DisableGadget(#entry_angle_outline,0)
+        DisableGadget(#track_angle_outline,0)
       EndIf
   EndSelect
   draw_canvas()
@@ -952,7 +951,7 @@ Procedure draw_canvas(mode=2)
                      global_character\outline\width, global_character\outline\path_option,
                      global_character\outline\alpha, nb_curseur_outline, color_outline1)
       EndIf    
-        
+      
       draw_character(char$, x * #CELL_WIDTH + decal_x, y * #CELL_HEIGHT + decal_y,
                      character_width, character_height,
                      global_character\color\linear, gradient_posx, gradient_posy,
@@ -1233,51 +1232,56 @@ EndProcedure
 
 ;-***** EXPORT IMAGE AND DATA *****
 Procedure export()
-  ;create the array containing the selected characters
-  Dim copy_char._character(256)
-  copy_selected_character_to_array(copy_char())
-  
   ;Collect path information
-  export_path$ = PathRequester(language_text("select_export_directory"), export_path$)  
-  image_filename$ = GetFilePart(GetGadgetText(#entry_image_file_name), #PB_FileSystem_NoExtension)
-  Select GetGadgetText(#combo_image_output_format)
-    Case "jpeg"
-      image_format = #PB_ImagePlugin_JPEG
-      image_extension$ = "jpg"
-    Case "bmp"
-      image_format = #PB_ImagePlugin_BMP      
-      image_extension$ = "bmp"
-    Default
-      image_format = #PB_ImagePlugin_PNG      
-      image_extension$ = "png"
-  EndSelect
-  
-  ;data format
-  data_pattern$ = GetGadgetText(#entry_format_data)
-  data_filename$ = GetGadgetText(#entry_data_file_name)
-  
-  ;if export one image per character
-  If GetGadgetState(#option_image_export_multiple)
-    Dim one_char._character(1)
-    increment = 0
-    complete_data$ = "pattern = " + data_pattern$ + #CR$   
-    For i=0 To ArraySize( copy_char() ) - 1
-      one_char(0)\value = copy_char(i)\value
-      one_char(0)\selected = copy_char(i)\selected
-      complete_data$ = complete_data$ + _export_image_data(one_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment)
-      increment + 1
-    Next
-    ;save another file with all containing data of all images
-    all_data_file = CreateFile(#PB_Any, export_path$ + "all_" + ReplaceString(data_filename$, "%image", image_filename$), #PB_UTF8 )
-    If all_data_file
-      WriteString(all_data_file, complete_data$, #PB_UTF8)
-      CloseFile(all_data_file)
+  memo_export_path$ = export_path$
+  export_path$ = PathRequester(language_text("choose_export_directory"), export_path$)  
+  If export_path$
+    If memo_export_path$ <> export_path$
+      save_preference()
     EndIf
-    FreeArray(one_char())
-  Else  ;export a single image with all characters inside
-    _export_image_data(copy_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$)
+    ;create the array containing the selected characters
+    Dim copy_char._character(256)
+    copy_selected_character_to_array(copy_char())
+    image_filename$ = GetFilePart(GetGadgetText(#entry_image_file_name), #PB_FileSystem_NoExtension)
+    Select GetGadgetText(#combo_image_output_format)
+      Case "jpeg"
+        image_format = #PB_ImagePlugin_JPEG
+        image_extension$ = "jpg"
+      Case "bmp"
+        image_format = #PB_ImagePlugin_BMP      
+        image_extension$ = "bmp"
+      Default
+        image_format = #PB_ImagePlugin_PNG      
+        image_extension$ = "png"
+    EndSelect
+    
+    ;data format
+    data_pattern$ = GetGadgetText(#entry_format_data)
+    data_filename$ = GetGadgetText(#entry_data_file_name)
+    
+    ;if export one image per character
+    If GetGadgetState(#option_image_export_multiple)
+      Dim one_char._character(1)
+      increment = 0
+      complete_data$ = "pattern = " + data_pattern$ + #CR$   
+      For i=0 To ArraySize( copy_char() ) - 1
+        one_char(0)\value = copy_char(i)\value
+        one_char(0)\selected = copy_char(i)\selected
+        complete_data$ = complete_data$ + _export_image_data(one_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment)
+        increment + 1
+      Next
+      ;save another file with all containing data of all images
+      all_data_file = CreateFile(#PB_Any, export_path$ + "all_" + ReplaceString(data_filename$, "%image", image_filename$), #PB_UTF8 )
+      If all_data_file
+        WriteString(all_data_file, complete_data$, #PB_UTF8)
+        CloseFile(all_data_file)
+      EndIf
+      FreeArray(one_char())
+    Else  ;export a single image with all characters inside
+      _export_image_data(copy_char(), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$)
+    EndIf
+    FreeArray(copy_char())
   EndIf
-  FreeArray(copy_char())
 EndProcedure
 
 Procedure.s _export_image_data(Array copy_char._character(1), export_path$, image_filename$, image_extension$, image_format, data_filename$, data_pattern$, increment = 0) 
@@ -1327,6 +1331,117 @@ Procedure.s _export_image_data(Array copy_char._character(1), export_path$, imag
   EndIf
 EndProcedure
 
+;-***** BACKUP PROJECT *****
+Procedure save_project()
+  memo_project_path$ = project_path$
+  path_filename$ = SaveFileRequester(language_text("save_project_filename"), project_path$ + current_project_filename$, "Fontim project|*.fmp|Tous les fichiers (*.*)|*.*", 0)
+  If path_filename$
+    project_path$ = GetPathPart(path_filename$)
+    If memo_project_path$ <> project_path$
+      save_preference()
+    EndIf
+    current_project_filename$ = GetFilePart(path_filename$)
+    save_file = CreateFile(#PB_Any, path_filename$)
+    If save_file
+      ;**************** SELECTED CHARACTER
+      NewList list_selected_character.b()
+      For i = 0 To 255
+        If character(i)\selected
+          AddElement(list_selected_character())
+          list_selected_character() = i
+        EndIf
+      Next
+      WriteByte(save_file, ListSize(list_selected_character()))
+      ForEach list_selected_character()
+        WriteByte(save_file, list_selected_character())  
+      Next
+           
+      ;**************** FONT
+      WriteStringN(save_file, global_character\fontName)
+      WriteInteger(save_file, global_character\size)
+      WriteInteger(save_file, global_character\style)
+      WriteDouble(save_file, global_character\offset_x)
+      WriteDouble(save_file, global_character\offset_y)
+      
+      ;**************** COULEUR
+      WriteByte(save_file, GetGadgetState(#option_gradient_linear) ) 
+      WriteInteger(save_file, Val(GetGadgetText(#spin_scale_linear_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#spin_radius_circular_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#spin_posx_color_linear_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#spin_posy_color_linear_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#spin_posx_color_circular_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#spin_posy_color_circular_gradient)) )
+      WriteInteger(save_file, Val(GetGadgetText(#entry_angle_color)) )
+      WriteInteger(save_file, Val(GetGadgetText(#entry_alpha_color)) )
+      ;List of cursor gradient module
+      
+      ; type de dégradé linear ciruclar
+      ; échelle ou rayon
+      ; liste des curseur du gradient gadget
+      ; position du dégradé X et Y
+      ; angle
+      ; alpha
+;       Structure _cursor
+;         position.f
+;         color.i
+;         active.b
+;       EndStructure
+;       
+;       Structure _character_color
+;         linear.b
+;         radius.i
+;         scale.d
+;         linear_gradient_posx.d
+;         linear_gradient_posy.d
+;         circular_gradient_posx.d
+;         circular_gradient_posy.d
+;         angle.f
+;         alpha.i
+;         List cursor._cursor()
+;       EndStructure
+
+      
+      ;**************** OUTLINE
+      ; actif
+      ; over
+      ; largeur
+      ; square end ou round end
+      ; diagonal corner ou rounded corner
+      ; liste des curseurs du gradient gadget
+      ; type du dégradé linear ou circular
+      ; scale ou rayon
+      ; offset X et Y des contours
+      ; angle si linear ou position X et Y dégradé si circular
+      ; alpha
+      
+      ;**************** EXPORT IMAGE
+      ; automatic size check
+      ; size x image
+      ; size y image
+      ; extention image combo box
+      ; check image with background
+      ; export mode single or multiple
+      ; character in name or counter
+      ; image filename
+      
+      ;**************** EXPORT DATA
+      ; name template
+      ; export type text or json
+      ; pattern
+      ; check same name of image
+      ; entry data filename
+      
+      
+      
+      CloseFile(save_file)
+    EndIf   
+  EndIf 
+EndProcedure
+
+Procedure load_project()
+  
+EndProcedure
+
 ;-***** SYSTEM FONT ENUMERATION *****
 ;{ system font enumeration procedure
 Procedure EnumFontFamProc(*lpelf.ENUMLOGFONT, *lpntm.NEWTEXTMETRIC, FontType, lParam)
@@ -1344,7 +1459,7 @@ Procedure SysInfo_Fonts()
 EndProcedure ;}
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 953
-; FirstLine = 1252
+; CursorPosition = 1372
+; FirstLine = 1346
 ; Folding = --------
 ; EnableXP

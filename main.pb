@@ -163,7 +163,7 @@ Repeat
             event_gadget(gevent)
           EndIf
         Case #spin_posx_color_circular_gradient, #spin_posy_color_circular_gradient, #spin_size_outline,
-             #spin_radius_circular_gradient, #Spin_posx_color_linear_gradient, #Spin_posy_color_linear_gradient,
+             #spin_radius_circular_gradient, #spin_posx_color_linear_gradient, #spin_posy_color_linear_gradient,
              #spin_scale_linear_gradient, #Spin_offset_x_outline, #Spin_offset_y_outline,
              #Spin_scale_gradient_outline, #Spin_posx_circular_gradient_outline, #Spin_posy_circular_gradient_outline,
              #Spin_radius_gradient_outline, #Entry_angle_outline, #Entry_alpha_outline, #Entry_angle_color,
@@ -214,7 +214,7 @@ Repeat
   EndSelect  
 Until event = #PB_Event_CloseWindow
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 42
-; FirstLine = 15
+; CursorPosition = 165
+; FirstLine = 114
 ; Folding = -
 ; EnableXP

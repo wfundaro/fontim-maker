@@ -302,8 +302,8 @@ Procedure initialisation_interface()
   SetGadgetState(#spin_offset_y,0)
   SetGadgetText(#entry_font_size,"16")
   SetGadgetState(#spin_size_outline,1)
-  SetGadgetState(#Spin_posx_color_linear_gradient,0)
-  SetGadgetState(#Spin_posy_color_linear_gradient,0)
+  SetGadgetState(#spin_posx_color_linear_gradient,0)
+  SetGadgetState(#spin_posy_color_linear_gradient,0)
   SetGadgetState(#Spin_offset_x_outline,0)
   SetGadgetState(#Spin_posx_circular_gradient_outline,0)
   SetGadgetState(#Spin_offset_y_outline,0)
@@ -323,6 +323,7 @@ EndProcedure
 
 
 ; IDE Options = PureBasic 5.72 (Windows - x64)
-; CursorPosition = 22
+; CursorPosition = 305
+; FirstLine = 250
 ; Folding = -
 ; EnableXP
